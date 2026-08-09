@@ -16,6 +16,7 @@ import Toast from './components/Toast'
 import { currentStreak, today } from './lib/dates'
 import { ALL_DONE_MESSAGES, encouragementFor } from './lib/encouragement'
 import { UI } from './lib/icons'
+import { FEEDBACK_URL } from './lib/links'
 import { overallRate, perfectDays, toneFor } from './lib/progress'
 import { BACKUP_META_KEY, readJSON, writeJSON } from './lib/storage'
 import { useHabits } from './lib/useHabits'
@@ -297,7 +298,22 @@ export default function App() {
         </div>
 
         <footer className="mt-12 border-t border-line pt-6 text-center">
-          <p className="text-xs text-ink-3">
+          <a
+            href={FEEDBACK_URL}
+            target="_blank"
+            // noreferrer also stops the new tab from reaching back via opener.
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl border border-line bg-card px-4 py-2.5 text-sm font-medium text-ink-2 transition hover:border-line-strong hover:bg-card-hover hover:text-ink"
+          >
+            <UI.feedback size={16} strokeWidth={1.9} aria-hidden="true" />
+            Share feedback
+            <UI.external size={13} strokeWidth={1.9} aria-hidden="true" />
+          </a>
+          <p className="mx-auto mt-2 max-w-xs text-[11px] text-ink-3">
+            Opens a Google Form in a new tab. Nothing is sent unless you submit it.
+          </p>
+
+          <p className="mt-6 text-xs text-ink-3">
             Miss a day, start again — the streak is not the point.
           </p>
           <p className="mt-2 text-xs text-ink-3">

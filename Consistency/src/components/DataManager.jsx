@@ -266,6 +266,11 @@ export default function DataManager({
             </li>
           ))}
         </ul>
+        {/* Stated plainly, so "nothing leaves this device" stays true. */}
+        <p className="mt-3 text-xs text-ink-3">
+          The one exception is the feedback link in the footer: tapping it opens a
+          Google Form in a new tab. None of your habits or notes go with it.
+        </p>
       </div>
 
       <div className="rounded-3xl border border-rose-500/40 bg-rose-500/5 p-4 sm:p-5">
