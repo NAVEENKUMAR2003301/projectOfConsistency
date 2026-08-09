@@ -35,9 +35,9 @@ npm run preview  # serve the production build locally
 
 ## Deploying to Vercel
 
-The app lives in the `Consistency/` subdirectory, and [`vercel.json`](../vercel.json)
-at the **repo root** already handles that — install, build, output directory,
-caching and security headers. There is nothing to configure in the dashboard.
+The app lives in the `Consistency/` subdirectory, so Vercel's **Root Directory**
+must point at it. [`vercel.json`](vercel.json) sits in this folder and supplies
+everything else — install, build, output directory, caching and security headers.
 
 1. Push to GitHub (this repo is already wired to `origin`):
    ```bash
@@ -46,8 +46,10 @@ caching and security headers. There is nothing to configure in the dashboard.
    git push
    ```
 2. Go to [vercel.com/new](https://vercel.com/new) and import the repository.
-3. Leave every setting at its default — `vercel.json` supplies them.
-4. Click **Deploy**.
+3. Set **Root Directory** to `Consistency`. Vercel usually detects this during
+   import; confirm it rather than assuming.
+   (Existing project: Settings → General → Root Directory.)
+4. Leave everything else at its default and click **Deploy**.
 
 Pushes to `main` become production deploys; every other branch and PR gets its own
 preview URL.
@@ -55,23 +57,30 @@ preview URL.
 ### Deploying from the CLI instead
 
 ```bash
+cd Consistency
 npm i -g vercel
 vercel          # preview deploy
 vercel --prod   # production deploy
 ```
 
-Run it from the **repo root**, not from `Consistency/` — the config lives at the root.
+Run it from `Consistency/` — the config lives here, next to `package.json`.
 
-### Build commands use `cd`, not `npm --prefix`
+### Why the commands have no paths in them
 
-`npm --prefix Consistency ci` looks correct but is not: `--prefix` changes where
-packages are **installed**, while npm still reads `package.json` and
-`package-lock.json` from the working directory. At the repo root there is no
-`package.json`, so it fails with `EUSAGE ... can only install with an existing
-package-lock.json`. Some npm versions tolerate it locally; Vercel's does not.
+Vercel runs the build with the **Root Directory as the working directory**, so the
+commands are plain `npm ci` and `npm run build`, and `outputDirectory` is just
+`dist`. Two path tricks that look right and both fail:
 
-`cd Consistency && npm ci` behaves the same on every npm version. `outputDirectory`
-stays relative to the repo root regardless of the `cd`.
+- `cd Consistency && npm ci` → `cd: Consistency: No such file or directory`, because
+  the shell is already inside it.
+- `npm --prefix Consistency ci` → `--prefix` changes where packages are *installed*
+  while npm still reads `package.json` from the working directory, so it fails with
+  `EUSAGE ... can only install with an existing package-lock.json` on the npm
+  version Vercel uses.
+
+If you ever move `vercel.json` back to the repo root, the Root Directory must be
+cleared and every path in it re-prefixed with `Consistency/`. Keeping the config
+beside `package.json` avoids the whole question.
 
 ### The Node version warning
 
@@ -87,15 +96,8 @@ that a newer local Node will then print `EBADENGINE` warnings when you install.
 
 ### If the build fails with "no package.json found"
 
-Vercel is looking in the wrong folder. Either keep `vercel.json` at the repo root
-(the default here), or switch to the dashboard approach instead:
-
-- Project → Settings → General → **Root Directory** → `Consistency`
-- Then move `vercel.json` into `Consistency/` and delete the
-  `installCommand` / `buildCommand` / `outputDirectory` keys, so Vercel's Vite
-  preset takes over.
-
-Do one or the other, not both.
+Root Directory is not set to `Consistency` — Vercel is looking at the repo root,
+which has no `package.json`. Fix it in Settings → General → **Root Directory**.
 
 ## What the deploy config does
 
