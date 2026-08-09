@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "$comment": "The app lives in Consistency/, and the repo root has no package.json — so framework detection is off and the commands target the subdirectory explicitly. Import the repo on Vercel and deploy; no dashboard settings needed.",
   "framework": null,
   "installCommand": "npm ci --prefix Consistency",
   "buildCommand": "npm run build --prefix Consistency",
