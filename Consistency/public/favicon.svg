@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Consistency">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a78bfa" />
+      <stop offset="0.55" stop-color="#7c3aed" />
+      <stop offset="1" stop-color="#6d28d9" />
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="15" fill="url(#tile)" />
+
+  <!-- Three ticks of a chain, then the check: the streak and the day it pays off.
+       Kept chunky so it survives being drawn at 16px in a browser tab. -->
+  <g fill="#ffffff" opacity="0.55">
+    <rect x="13" y="45" width="7" height="7" rx="2.2" />
+    <rect x="24.5" y="45" width="7" height="7" rx="2.2" />
+    <rect x="36" y="45" width="7" height="7" rx="2.2" />
+  </g>
+
+  <path
+    d="M17 29.5 L27 39 L47.5 17"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="7.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

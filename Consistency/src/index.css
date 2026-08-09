@@ -1,0 +1,233 @@
+@import 'tailwindcss';
+
+/* Theme is driven by an explicit data-theme attribute (set before first paint
+   in index.html), so "system" resolves in JS and there is never a flash. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* Self-hosted (see main.jsx) so handwriting still renders offline. */
+  --font-hand: 'Caveat', 'Segoe Script', 'Bradley Hand', cursive;
+
+  /* Dark is the default palette; the light block below overrides the values.
+     Every token is a CSS variable, so overriding it flips every utility. */
+  --color-surface: #09090f;
+  --color-raised: #14141f;
+  --color-card: #131320;
+  --color-card-hover: #1a1a29;
+  --color-line: #272739;
+  --color-line-strong: #363650;
+  --color-ink: #f3f3f8;
+  --color-ink-2: #a3a3bd;
+  --color-ink-3: #6e6e8c;
+  --color-track: #23233a;
+
+  --animate-pop: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-rise: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shake: shake 0.4s ease-in-out;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-glow: glow 2s ease-in-out infinite;
+  --animate-confetti: confetti 1.4s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
+  --animate-sweep: sweep 1.2s ease-in-out infinite;
+}
+
+:root {
+  /* Notebook paper */
+  --paper: #16161f;
+  --paper-rule: #2e2e45;
+  --paper-margin: #7c3b4a;
+  --paper-ink: #cdd7ff;
+  --paper-ink-faded: #6f7699;
+
+  --backdrop: rgb(0 0 0 / 0.72);
+  --glow: rgba(139, 92, 246, 0.16);
+  --glow-ring: rgb(217 70 239 / 0.45);
+  --glow-ring-soft: rgb(217 70 239 / 0.25);
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --color-surface: #f5f5fa;
+  --color-raised: #ffffff;
+  --color-card: #ffffff;
+  --color-card-hover: #f4f4fa;
+  --color-line: #e4e4ef;
+  --color-line-strong: #cfcfe0;
+  --color-ink: #17172a;
+  --color-ink-2: #56566f;
+  --color-ink-3: #8a8aa5;
+  --color-track: #e6e6f0;
+
+  --paper: #fffdf3;
+  --paper-rule: #c9dcf0;
+  --paper-margin: #e9a3a3;
+  --paper-ink: #1e2f63;
+  --paper-ink-faded: #8b93b0;
+
+  --backdrop: rgb(23 23 42 / 0.45);
+  --glow: rgba(139, 92, 246, 0.14);
+  --glow-ring: rgb(147 51 234 / 0.35);
+  --glow-ring-soft: rgb(147 51 234 / 0.18);
+  color-scheme: light;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-5px);
+  }
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--glow-ring);
+  }
+  50% {
+    box-shadow: 0 0 26px 4px var(--glow-ring-soft);
+  }
+}
+
+@keyframes confetti {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* Notebook paper. The ruled lines are a repeating gradient whose period MUST
+   equal line-height, or the handwriting drifts off the rules line by line.
+   background-origin differs per layer: the rules start at the content box (so
+   they line up with the first line of text regardless of padding), while the
+   red margin rule is measured from the padding box. */
+.paper {
+  --rule: 32px;
+  --margin-x: 40px;
+
+  font-family: var(--font-hand);
+  font-size: 21px;
+  line-height: var(--rule);
+  color: var(--paper-ink);
+
+  padding: 14px 18px 18px 56px;
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--rule) - 1px),
+      var(--paper-rule) calc(var(--rule) - 1px),
+      var(--paper-rule) var(--rule)
+    ),
+    linear-gradient(
+      to right,
+      transparent 0 var(--margin-x),
+      var(--paper-margin) var(--margin-x) calc(var(--margin-x) + 1px),
+      transparent calc(var(--margin-x) + 1px)
+    );
+  background-origin: content-box, padding-box;
+  background-repeat: repeat, no-repeat;
+  /* `local` keeps the rules glued to the text while a textarea scrolls. */
+  background-attachment: local, local;
+}
+
+/* The writable version must match the display version exactly, or text jumps
+   between editing and reading. */
+textarea.paper {
+  display: block;
+  width: 100%;
+  resize: none;
+  overflow: hidden;
+  border: 0;
+  outline: none;
+  caret-color: var(--paper-ink);
+}
+
+textarea.paper::placeholder {
+  color: var(--paper-ink-faded);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  /* Keeps long habit names from forcing a horizontal scrollbar on narrow phones. */
+  overflow-wrap: break-word;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
