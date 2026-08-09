@@ -62,6 +62,29 @@ vercel --prod   # production deploy
 
 Run it from the **repo root**, not from `Consistency/` — the config lives at the root.
 
+### Build commands use `cd`, not `npm --prefix`
+
+`npm --prefix Consistency ci` looks correct but is not: `--prefix` changes where
+packages are **installed**, while npm still reads `package.json` and
+`package-lock.json` from the working directory. At the repo root there is no
+`package.json`, so it fails with `EUSAGE ... can only install with an existing
+package-lock.json`. Some npm versions tolerate it locally; Vercel's does not.
+
+`cd Consistency && npm ci` behaves the same on every npm version. `outputDirectory`
+stays relative to the repo root regardless of the `cd`.
+
+### The Node version warning
+
+The build log shows:
+
+> Detected `"engines": { "node": ">=20.19" }` … will automatically upgrade when a
+> new major Node.js version is released.
+
+This is informational and the build proceeds. `>=20.19` is the true minimum (Vite 8
+requires it). If you would rather pin the build to one major for reproducibility,
+change `engines.node` in `Consistency/package.json` to e.g. `"22.x"` — but note
+that a newer local Node will then print `EBADENGINE` warnings when you install.
+
 ### If the build fails with "no package.json found"
 
 Vercel is looking in the wrong folder. Either keep `vercel.json` at the repo root

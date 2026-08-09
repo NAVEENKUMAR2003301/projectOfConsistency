@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npm ci --prefix Consistency",
-  "buildCommand": "npm run build --prefix Consistency",
+  "installCommand": "cd Consistency && npm ci",
+  "buildCommand": "cd Consistency && npm run build",
   "outputDirectory": "Consistency/dist",
   "cleanUrls": true,
   "trailingSlash": false,
