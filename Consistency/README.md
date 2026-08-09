@@ -96,6 +96,19 @@ With the field omitted, both are quiet and Vercel uses the project's configured
 Node version. To pin it explicitly, use Settings → General → **Node.js Version**
 in the dashboard — that controls the build without affecting local development.
 
+### "Loading a manifest … violates … manifest-src 'self'"
+
+This appears on **preview URLs with Deployment Protection enabled**. Vercel
+intercepts the manifest request and redirects it to `vercel.com/sso-api` for
+authentication, which the CSP correctly refuses. `manifest-src` therefore also
+allows `https://vercel.com`, scoped to manifests only — scripts, styles and
+connections stay locked to `'self'`.
+
+For a public app the better fix is to turn the protection off, so visitors are not
+asked to log into Vercel: Settings → **Deployment Protection** → Vercel
+Authentication → Disabled (or Production only). Your production domain is not
+affected by this either way.
+
 ### If the build fails with "no package.json found"
 
 Root Directory is not set to `Consistency` — Vercel is looking at the repo root,
