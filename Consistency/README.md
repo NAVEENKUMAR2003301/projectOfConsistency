@@ -82,17 +82,19 @@ If you ever move `vercel.json` back to the repo root, the Root Directory must be
 cleared and every path in it re-prefixed with `Consistency/`. Keeping the config
 beside `package.json` avoids the whole question.
 
-### The Node version warning
+### Why there is no `engines` field
 
-The build log shows:
+Vite 8 needs **Node 20.19+**, but that requirement is deliberately not in
+`package.json`, because every way of writing it there has a cost:
 
-> Detected `"engines": { "node": ">=20.19" }` … will automatically upgrade when a
-> new major Node.js version is released.
+- `">=20.19"` makes Vercel warn that the build *"will automatically upgrade when a
+  new major Node.js version is released"*.
+- `"22.x"` silences that, but then any newer local Node prints `EBADENGINE` on
+  every `npm install`.
 
-This is informational and the build proceeds. `>=20.19` is the true minimum (Vite 8
-requires it). If you would rather pin the build to one major for reproducibility,
-change `engines.node` in `Consistency/package.json` to e.g. `"22.x"` — but note
-that a newer local Node will then print `EBADENGINE` warnings when you install.
+With the field omitted, both are quiet and Vercel uses the project's configured
+Node version. To pin it explicitly, use Settings → General → **Node.js Version**
+in the dashboard — that controls the build without affecting local development.
 
 ### If the build fails with "no package.json found"
 
