@@ -25,7 +25,7 @@ function Bar({ point }) {
 export default function StatsDashboard({ habits }) {
   if (habits.length === 0) {
     return (
-      <section className="rounded-3xl border border-line bg-card p-8 text-center">
+      <section className="glass rounded-3xl p-8 text-center">
         <UI.stats size={30} strokeWidth={1.6} className="mx-auto text-ink-3" aria-hidden="true" />
         <p className="mt-3 font-medium text-ink">No statistics yet</p>
         <p className="mx-auto mt-1 max-w-xs text-sm text-ink-3">
@@ -77,7 +77,7 @@ export default function StatsDashboard({ habits }) {
         ))}
       </div>
 
-      <div className="rounded-3xl border border-line bg-card p-4 sm:p-5">
+      <div className="glass rounded-3xl p-4 sm:p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="font-semibold text-ink">Last 14 days</h3>
           <p
@@ -99,7 +99,7 @@ export default function StatsDashboard({ habits }) {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-line bg-card p-4 sm:p-5">
+      <div className="glass rounded-3xl p-4 sm:p-5">
         <h3 className="font-semibold text-ink">Per habit — last 30 days</h3>
         <ul className="mt-4 space-y-3">
           {ranked.map(({ habit, rate, streak }) => {

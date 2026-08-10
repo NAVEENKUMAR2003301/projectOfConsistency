@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ExpenseForm from './ExpenseForm'
 import { colorOf } from '../lib/colors'
 import { dayLabel } from '../lib/dates'
@@ -7,12 +7,17 @@ import { UI, categoryIcon } from '../lib/icons'
 
 const VISIBLE_DAYS = 7
 
-function Stat({ label, value, strong = false }) {
+function Stat({ label, value, strong = false, delay = 0 }) {
   return (
-    <div className="rounded-2xl border border-line bg-card p-3 text-center sm:p-4">
+    <div
+      style={{ animationDelay: `${delay}ms` }}
+      className="glass glass-hover animate-rise rounded-2xl p-3 text-center transition-all duration-300 hover:-translate-y-0.5 sm:p-4"
+    >
       <p className="text-[11px] tracking-wide text-ink-3 uppercase">{label}</p>
+      {/* Keyed on the value so the figure pops when spending changes. */}
       <p
-        className={`mt-1 font-bold break-words ${
+        key={value}
+        className={`animate-count mt-1 font-bold break-words ${
           strong ? 'text-xl text-ink sm:text-2xl' : 'text-lg text-ink'
         }`}
       >
@@ -36,7 +41,22 @@ export default function MoneyTab({
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [confirmCategory, setConfirmCategory] = useState(null)
   const [visibleDays, setVisibleDays] = useState(VISIBLE_DAYS)
+
+  // Armed delete buttons disarm themselves, matching habits and notes — a
+  // confirm left sitting under the cursor is one mis-click from data loss.
+  useEffect(() => {
+    if (!confirmDelete) return
+    const t = setTimeout(() => setConfirmDelete(null), 4000)
+    return () => clearTimeout(t)
+  }, [confirmDelete])
+
+  useEffect(() => {
+    if (!confirmCategory) return
+    const t = setTimeout(() => setConfirmCategory(null), 4000)
+    return () => clearTimeout(t)
+  }, [confirmCategory])
 
   const sums = useMemo(() => totals(expenses), [expenses])
   const monthExpenses = useMemo(() => inMonth(expenses), [expenses])
@@ -81,8 +101,8 @@ export default function MoneyTab({
 
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <Stat label="Today" value={money(sums.today)} />
-        <Stat label="Last 7 days" value={money(sums.week)} />
-        <Stat label="This month" value={money(sums.month)} strong />
+        <Stat label="Last 7 days" value={money(sums.week)} delay={70} />
+        <Stat label="This month" value={money(sums.month)} strong delay={140} />
       </div>
 
       {creating ? (
@@ -107,7 +127,7 @@ export default function MoneyTab({
       )}
 
       {expenses.length === 0 && !creating && (
-        <div className="rounded-3xl border border-line bg-card p-8 text-center">
+        <div className="glass rounded-3xl p-8 text-center">
           <UI.receipt size={30} strokeWidth={1.6} className="mx-auto text-ink-3" aria-hidden="true" />
           <p className="mt-3 font-medium text-ink">Nothing recorded yet</p>
           <p className="mx-auto mt-1 max-w-xs text-sm text-ink-3">
@@ -117,7 +137,7 @@ export default function MoneyTab({
       )}
 
       {breakdown.length > 0 && (
-        <div className="rounded-3xl border border-line bg-card p-4 sm:p-5">
+        <div className="glass rounded-3xl p-4 sm:p-5">
           <h3 className="font-semibold text-ink">This month by category</h3>
           <ul className="mt-4 space-y-3">
             {breakdown.map(({ category, total, pct }) => {
@@ -260,7 +280,7 @@ export default function MoneyTab({
       )}
 
       {categories.length > 0 && (
-        <div className="rounded-3xl border border-line bg-card p-4 sm:p-5">
+        <div className="glass rounded-3xl p-4 sm:p-5">
           <h3 className="font-semibold text-ink">Your categories</h3>
           <p className="mt-1 text-xs text-ink-3">
             Deleting one keeps its expenses — they simply become uncategorised, so no
@@ -277,12 +297,29 @@ export default function MoneyTab({
                 >
                   <Icon size={13} strokeWidth={1.9} aria-hidden="true" />
                   {category.name}
+                  {/* Two-step, like every other delete in the app. */}
                   <button
-                    onClick={() => onRemoveCategory(category.id)}
-                    aria-label={`Delete category ${category.name}`}
-                    className="text-ink-3 transition hover:text-rose-500"
+                    onClick={() =>
+                      confirmCategory === category.id
+                        ? (onRemoveCategory(category.id), setConfirmCategory(null))
+                        : setConfirmCategory(category.id)
+                    }
+                    aria-label={
+                      confirmCategory === category.id
+                        ? `Confirm delete category ${category.name}`
+                        : `Delete category ${category.name}`
+                    }
+                    className={`transition ${
+                      confirmCategory === category.id
+                        ? 'font-semibold text-rose-500'
+                        : 'text-ink-3 hover:text-rose-500'
+                    }`}
                   >
-                    <UI.close size={12} strokeWidth={2.4} aria-hidden="true" />
+                    {confirmCategory === category.id ? (
+                      'Sure?'
+                    ) : (
+                      <UI.close size={12} strokeWidth={2.4} aria-hidden="true" />
+                    )}
                   </button>
                 </li>
               )

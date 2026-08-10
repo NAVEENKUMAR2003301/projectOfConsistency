@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { COLOR_KEYS, DEFAULT_COLOR, colorOf } from '../lib/colors'
 import { today } from '../lib/dates'
 import { CATEGORY_ICONS, UI, categoryIcon } from '../lib/icons'
-import { MAX_AMOUNT, parseAmount, toAmountInput } from '../lib/money'
+import { parseAmount, toAmountInput } from '../lib/money'
 import { MAX_EXPENSE_NOTE } from '../lib/storage'
 
 // Names offered when you have no categories yet — a starting point, not a set
@@ -37,17 +37,15 @@ export default function ExpenseForm({
 
   const submit = (e) => {
     e.preventDefault()
+    // parseAmount already rejects zero, negatives and anything above the cap,
+    // so a null result covers every failure — no second check needed.
     const minor = parseAmount(amount)
     if (minor === null) {
       setError(
         amount.trim() === ''
           ? 'Enter how much you spent.'
-          : 'That is not an amount this can store.',
+          : 'Enter a positive amount, like 250 or 12.50.',
       )
-      return
-    }
-    if (minor > MAX_AMOUNT) {
-      setError('That amount is too large.')
       return
     }
     onSubmit({ amount: minor, categoryId, note, day })
@@ -67,7 +65,7 @@ export default function ExpenseForm({
   return (
     <form
       onSubmit={submit}
-      className="animate-rise rounded-3xl border border-line bg-card p-4 sm:p-5"
+      className="animate-rise glass rounded-3xl p-4 sm:p-5"
     >
       <label htmlFor="expense-amount" className="text-sm font-medium text-ink-2">
         How much?

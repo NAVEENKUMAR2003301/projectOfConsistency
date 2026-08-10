@@ -148,13 +148,9 @@ export default function App() {
   const headerTone = toneFor(stats.rate)
 
   return (
-    <div
-      className="min-h-full bg-surface"
-      style={{
-        backgroundImage:
-          'radial-gradient(60rem 40rem at 50% -10%, var(--glow), transparent)',
-      }}
-    >
+    <div className="relative min-h-full bg-surface">
+      {/* Colour pools the frosted panels refract; fixed so they never scroll away. */}
+      <div className="ambient" aria-hidden="true" />
       {/* Bottom padding reserves room for the fixed mobile nav. */}
       <div className="mx-auto max-w-3xl px-4 pt-6 pb-28 sm:px-6 sm:pt-10 sm:pb-10">
         <div className="flex items-center justify-between gap-3">
@@ -185,10 +181,11 @@ export default function App() {
             { label: 'Longest active streak', value: `${stats.longest}d`, Icon: UI.flame },
             { label: 'Total check-ins', value: stats.checkIns, Icon: UI.today },
             { label: 'Perfect days', value: stats.perfect, Icon: UI.trophy },
-          ].map(({ label, value, Icon }) => (
+          ].map(({ label, value, Icon }, i) => (
             <div
               key={label}
-              className="rounded-2xl border border-line bg-card p-3 text-center transition hover:border-line-strong sm:p-4"
+              className="glass glass-hover animate-rise rounded-2xl p-3 text-center transition-all duration-300 hover:-translate-y-0.5 sm:p-4"
+              style={{ animationDelay: `${i * 70}ms` }}
             >
               <Icon
                 size={20}
@@ -196,7 +193,10 @@ export default function App() {
                 className="mx-auto text-ink-3"
                 aria-hidden="true"
               />
-              <p className="mt-1.5 text-xl font-bold text-ink">{value}</p>
+              {/* Keyed on the value so the number pops when it changes. */}
+              <p key={String(value)} className="animate-count mt-1.5 text-xl font-bold text-ink">
+                {value}
+              </p>
               <p className="mt-0.5 text-[11px] leading-tight text-ink-3">{label}</p>
             </div>
           ))}
@@ -216,11 +216,13 @@ export default function App() {
           </div>
         )}
 
-        <div className="mt-6">
+        {/* Sticky so the sections stay reachable without scrolling back up. */}
+        <div className="sticky top-0 z-20 -mx-4 mt-6 px-4 py-2 sm:mx-0 sm:px-0">
           <Tabs active={tab} onChange={setTab} />
         </div>
 
-        <div className="mt-6">
+        {/* Keyed on the tab so switching sections animates in rather than snapping. */}
+        <div key={tab} className="animate-tab mt-4">
           {showBackupReminder && (
             <BackupReminder
               onGoToData={() => setTab('data')}
@@ -238,9 +240,10 @@ export default function App() {
                 onRequest={reminders.request}
                 onCheckIn={setPuzzleFor}
               />
-              {habits.map((habit) => (
+              {habits.map((habit, i) => (
                 <HabitCard
                   key={habit.id}
+                  index={i}
                   habit={habit}
                   onCheckIn={setPuzzleFor}
                   onUndo={undoToday}

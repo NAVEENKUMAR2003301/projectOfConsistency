@@ -135,10 +135,3 @@ export function categoryTotals(expenses, categories) {
     }))
     .sort((a, b) => b.total - a.total)
 }
-
-/** Per-day totals for the bar chart, oldest → today. */
-export const dailySeries = (expenses, days = 14) =>
-  Array.from({ length: days }, (_, i) => {
-    const day = addDays(today(), i - (days - 1))
-    return { day, total: sumOf(onDay(expenses, day)) }
-  })

@@ -141,7 +141,7 @@ export default function CalendarView({ habits }) {
         <Stat value={summary.tracked} label="Days tracked" />
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-3xl border border-line bg-card p-3 sm:p-4">
+      <div className="mt-3 overflow-hidden glass rounded-3xl p-3 sm:p-4">
         <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
           {WEEKDAY_INITIALS.map((d, i) => (
             <div
@@ -205,7 +205,7 @@ export default function CalendarView({ habits }) {
       </div>
 
       {selected && (
-        <div className="animate-rise mt-4 rounded-3xl border border-line bg-card p-4 sm:p-5">
+        <div className="animate-rise mt-4 glass rounded-3xl p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="font-semibold text-ink">{dayLabel(selected)}</h3>

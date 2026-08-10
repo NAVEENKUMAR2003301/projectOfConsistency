@@ -145,7 +145,7 @@ export default function DataManager({
 
   return (
     <section className="space-y-4">
-      <div className="rounded-3xl border border-line bg-card p-4 sm:p-5">
+      <div className="glass rounded-3xl p-4 sm:p-5">
         <h3 className="font-semibold text-ink">Backup your data</h3>
         <p className="mt-1 text-sm text-ink-2">
           Everything lives in this browser only. Clearing site data, switching browsers
@@ -257,7 +257,7 @@ export default function DataManager({
         )}
       </div>
 
-      <div className="rounded-3xl border border-line bg-card p-4 sm:p-5">
+      <div className="glass rounded-3xl p-4 sm:p-5">
         <h3 className="font-semibold text-ink">Storage used</h3>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-track">
           <div
@@ -271,7 +271,7 @@ export default function DataManager({
         </p>
       </div>
 
-      <div className="rounded-3xl border border-line bg-card p-4 sm:p-5">
+      <div className="glass rounded-3xl p-4 sm:p-5">
         <h3 className="font-semibold text-ink">Privacy</h3>
         <ul className="mt-2 space-y-1.5 text-sm text-ink-2">
           {[

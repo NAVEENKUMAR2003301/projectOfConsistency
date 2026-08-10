@@ -53,7 +53,7 @@ export default function HabitForm({
   return (
     <form
       onSubmit={submit}
-      className="animate-rise rounded-3xl border border-line bg-card p-4 sm:p-5"
+      className="animate-rise glass rounded-3xl p-4 sm:p-5"
     >
       <label htmlFor="habit-name" className="text-sm font-medium text-ink-2">
         {isEdit ? 'Habit name' : 'What will you do every day?'}

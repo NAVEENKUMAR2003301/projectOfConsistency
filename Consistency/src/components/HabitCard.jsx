@@ -15,7 +15,7 @@ import {
 import { habitRate, toneFor } from '../lib/progress'
 import { formatTime } from '../lib/reminders'
 
-export default function HabitCard({ habit, onCheckIn, onUndo, onEdit, onRemove }) {
+export default function HabitCard({ habit, onCheckIn, onUndo, onEdit, onRemove, index = 0 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const c = colorOf(habit.color)
   const done = Boolean(habit.history[today()])
@@ -35,8 +35,11 @@ export default function HabitCard({ habit, onCheckIn, onUndo, onEdit, onRemove }
 
   return (
     <article
-      className={`group relative overflow-hidden rounded-3xl border p-4 transition-all duration-300 sm:p-5 ${
-        done ? `${c.border} ${c.soft}` : 'border-line bg-card hover:border-line-strong'
+      // Cards arrive in sequence rather than all at once; capped so a long
+      // list never feels like it is loading slowly.
+      style={{ animationDelay: `${Math.min(index * 60, 300)}ms` }}
+      className={`group animate-rise relative overflow-hidden rounded-3xl p-4 transition-all duration-300 hover:-translate-y-0.5 sm:p-5 ${
+        done ? `border ${c.border} ${c.soft}` : 'glass glass-hover'
       }`}
     >
       {done && (

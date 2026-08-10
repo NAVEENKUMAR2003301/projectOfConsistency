@@ -77,7 +77,7 @@ export default function PuzzleModal({ habit, onSolved, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-label={`Puzzle to check in: ${habit.name}`}
-        className={`animate-pop my-auto w-full max-w-md rounded-3xl border border-line bg-raised p-5 shadow-2xl outline-none sm:p-6 ${
+        className={`glass animate-pop my-auto w-full max-w-md rounded-3xl p-5 outline-none sm:p-6 ${
           wrong ? 'animate-shake' : ''
         }`}
       >
@@ -120,10 +120,10 @@ export default function PuzzleModal({ habit, onSolved, onClose }) {
                 disabled={solved}
                 className={`rounded-2xl border px-3 py-4 text-base font-semibold break-words transition-all duration-200 sm:text-lg ${
                   isRight
-                    ? 'scale-105 border-emerald-500 bg-emerald-500/20 text-emerald-700 dark:text-emerald-200'
+                    ? 'scale-105 border-emerald-500 bg-emerald-500/20 text-emerald-700 shadow-lg shadow-emerald-500/20 dark:text-emerald-200'
                     : isWrong
                       ? 'border-rose-500 bg-rose-500/15 text-rose-700 dark:text-rose-200'
-                      : 'border-line bg-card text-ink hover:-translate-y-0.5 hover:border-line-strong hover:bg-card-hover'
+                      : 'border-line bg-card text-ink hover:-translate-y-0.5 hover:border-violet-500/50 hover:bg-card-hover hover:shadow-lg active:scale-95'
                 } disabled:cursor-default`}
               >
                 {option}

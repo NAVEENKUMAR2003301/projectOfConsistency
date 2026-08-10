@@ -11,7 +11,7 @@ export default function MobileNav({ active, onChange }) {
   return (
     <nav
       aria-label="Sections"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 backdrop-blur sm:hidden"
+      className="glass fixed inset-x-0 bottom-0 z-30 rounded-t-2xl border-x-0 border-b-0 sm:hidden"
       // Keeps the row clear of the iPhone home indicator.
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
@@ -23,8 +23,10 @@ export default function MobileNav({ active, onChange }) {
               key={key}
               onClick={() => onChange(key)}
               aria-current={isActive ? 'page' : undefined}
-              className={`relative flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition ${
-                isActive ? 'text-violet-600 dark:text-violet-300' : 'text-ink-3'
+              className={`relative flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-all duration-200 active:scale-95 ${
+                isActive
+                  ? 'scale-105 text-violet-600 dark:text-violet-300'
+                  : 'text-ink-3 hover:text-ink-2'
               }`}
             >
               {/* Sits on the border itself, so the active tab reads as attached. */}

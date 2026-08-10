@@ -6,7 +6,7 @@ export default function Tabs({ active, onChange }) {
     <div
       role="tablist"
       aria-label="Sections"
-      className="hidden gap-1 overflow-x-auto pb-1 sm:flex"
+      className="glass hidden gap-1 rounded-full p-1.5 sm:flex"
     >
       {TABS.map(({ key, Icon, label }) => {
         const isActive = active === key
@@ -16,10 +16,10 @@ export default function Tabs({ active, onChange }) {
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(key)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition ${
+            className={`flex flex-1 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
               isActive
-                ? 'border-transparent bg-violet-600 text-white'
-                : 'border-line bg-card text-ink-2 hover:bg-card-hover hover:text-ink'
+                ? 'scale-[1.03] bg-violet-600 text-white shadow-lg shadow-violet-600/25'
+                : 'text-ink-2 hover:bg-card-hover hover:text-ink'
             }`}
           >
             <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
