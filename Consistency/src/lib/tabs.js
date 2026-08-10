@@ -6,6 +6,7 @@ export const TABS = [
   { key: 'today', label: 'Today', Icon: UI.today },
   { key: 'calendar', label: 'Calendar', Icon: UI.calendar },
   { key: 'stats', label: 'Stats', Icon: UI.stats },
+  { key: 'money', label: 'Money', Icon: UI.money },
   { key: 'notes', label: 'Notes', Icon: UI.notes },
   { key: 'data', label: 'Data', Icon: UI.data },
 ]

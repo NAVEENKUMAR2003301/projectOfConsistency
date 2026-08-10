@@ -3,6 +3,8 @@ import {
   backupFilename,
   buildBackup,
   downloadBackup,
+  mergeCategories,
+  mergeExpenses,
   mergeHabits,
   mergeNotes,
   parseBackup,
@@ -23,8 +25,12 @@ const formatBytes = (bytes) =>
 export default function DataManager({
   habits,
   notes,
+  expenses = [],
+  categories = [],
   onReplaceHabits,
   onReplaceNotes,
+  onReplaceExpenses,
+  onReplaceCategories,
   onExported,
   lastBackupAt,
 }) {
@@ -39,11 +45,15 @@ export default function DataManager({
   // render: the write happens in an effect, so reading storage here would show
   // the size from before the change that triggered this render.
   const used = useMemo(
-    () => JSON.stringify(habits).length + JSON.stringify(notes).length,
-    [habits, notes],
+    () =>
+      JSON.stringify(habits).length +
+      JSON.stringify(notes).length +
+      JSON.stringify(expenses).length +
+      JSON.stringify(categories).length,
+    [habits, notes, expenses, categories],
   )
   const usedPct = Math.min(100, Math.round((used / QUOTA_BYTES) * 100))
-  const isEmpty = habits.length === 0 && notes.length === 0
+  const isEmpty = habits.length === 0 && notes.length === 0 && expenses.length === 0
 
   const handleExportExcel = async () => {
     setError('')
@@ -51,7 +61,7 @@ export default function DataManager({
     setBusy(true)
     try {
       const { exportWorkbook } = await loadExcel()
-      await exportWorkbook({ habits, notes })
+      await exportWorkbook({ habits, notes, expenses, categories })
       onExported()
       setStatus('Excel backup downloaded.')
     } catch {
@@ -64,7 +74,7 @@ export default function DataManager({
   const handleExportJson = () => {
     setError('')
     setStatus('')
-    const ok = downloadBackup(buildBackup({ habits, notes }), backupFilename())
+    const ok = downloadBackup(buildBackup({ habits, notes, expenses, categories }), backupFilename())
     if (ok) {
       onExported()
       setStatus('JSON backup downloaded.')
@@ -102,9 +112,19 @@ export default function DataManager({
     if (mode === 'replace') {
       onReplaceHabits(pending.habits)
       onReplaceNotes(pending.notes)
+      onReplaceCategories(pending.categories ?? [])
+      onReplaceExpenses(pending.expenses ?? [])
     } else {
       onReplaceHabits(mergeHabits(habits, pending.habits))
       onReplaceNotes(mergeNotes(notes, pending.notes))
+      // Categories merge first: expenses reference them, and incoming ids get
+      // remapped onto the matching local category.
+      const { categories: mergedCategories, remap } = mergeCategories(
+        categories,
+        pending.categories ?? [],
+      )
+      onReplaceCategories(mergedCategories)
+      onReplaceExpenses(mergeExpenses(expenses, pending.expenses ?? [], remap))
     }
     setStatus(
       mode === 'replace'
@@ -117,8 +137,10 @@ export default function DataManager({
   const handleReset = () => {
     onReplaceHabits([])
     onReplaceNotes([])
+    onReplaceExpenses([])
+    onReplaceCategories([])
     setConfirmReset(false)
-    setStatus('All habits and notes were deleted.')
+    setStatus('All habits, notes and expenses were deleted.')
   }
 
   return (
@@ -172,10 +194,11 @@ export default function DataManager({
         </div>
 
         <p className="mt-3 text-xs text-ink-3">
-          The spreadsheet has three sheets — <strong>Habits</strong>,{' '}
-          <strong>Check-ins</strong> (one row per completed day) and{' '}
-          <strong>Notes</strong> — so you can read or edit it in Excel, Google Sheets
-          or LibreOffice. Import accepts either format.
+          The spreadsheet has five sheets — <strong>Habits</strong>,{' '}
+          <strong>Check-ins</strong> (one row per completed day), <strong>Notes</strong>,{' '}
+          <strong>Expenses</strong> (one row per expense) and{' '}
+          <strong>Categories</strong> — so you can read or edit it in Excel, Google
+          Sheets or LibreOffice. Import accepts either format.
         </p>
 
         {busy && <p className="mt-3 text-sm text-ink-3">Working…</p>}
@@ -195,8 +218,9 @@ export default function DataManager({
           <div className="animate-rise mt-4 rounded-2xl border border-line bg-surface p-4">
             <p className="text-sm font-medium text-ink">
               {pending.source} backup: {pending.habits.length} habit
-              {pending.habits.length === 1 ? '' : 's'} and {pending.notes.length} note
-              {pending.notes.length === 1 ? '' : 's'}.
+              {pending.habits.length === 1 ? '' : 's'}, {pending.notes.length} note
+              {pending.notes.length === 1 ? '' : 's'} and {pending.expenses?.length ?? 0}{' '}
+              expense{(pending.expenses?.length ?? 0) === 1 ? '' : 's'}.
             </p>
             {pending.skipped > 0 && (
               <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
@@ -297,7 +321,7 @@ export default function DataManager({
         ) : (
           <button
             onClick={() => setConfirmReset(true)}
-            disabled={isEmpty}
+            disabled={isEmpty && expenses.length === 0}
             className="mt-3 rounded-xl border border-rose-500/50 px-4 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-500/10 disabled:opacity-40 dark:text-rose-300"
           >
             Reset all data

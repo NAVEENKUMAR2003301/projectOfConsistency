@@ -1,16 +1,23 @@
 import { dayKey } from './dates'
-import { normalizeHabits, normalizeNotes } from './storage'
+import {
+  normalizeCategories,
+  normalizeExpenses,
+  normalizeHabits,
+  normalizeNotes,
+} from './storage'
 
 export const BACKUP_VERSION = 1
 export const BACKUP_APP = 'consistency'
 
-export function buildBackup({ habits, notes }, now = new Date()) {
+export function buildBackup({ habits, notes, expenses = [], categories = [] }, now = new Date()) {
   return {
     app: BACKUP_APP,
     version: BACKUP_VERSION,
     exportedAt: now.toISOString(),
     habits,
     notes,
+    expenses,
+    categories,
   }
 }
 
@@ -35,8 +42,8 @@ export function parseBackup(text) {
   if (data.app && data.app !== BACKUP_APP) {
     throw new Error('That backup was made by a different app.')
   }
-  if (!('habits' in data) && !('notes' in data)) {
-    throw new Error('That file has no habits or notes in it.')
+  if (!('habits' in data) && !('notes' in data) && !('expenses' in data)) {
+    throw new Error('That file has no habits, notes or expenses in it.')
   }
   if (typeof data.version === 'number' && data.version > BACKUP_VERSION) {
     throw new Error(
@@ -48,12 +55,14 @@ export function parseBackup(text) {
   // the app would have rejected on load.
   const habits = normalizeHabits(data.habits)
   const notes = normalizeNotes(data.notes)
+  const expenses = normalizeExpenses(data.expenses)
+  const categories = normalizeCategories(data.categories)
 
-  if (habits.length === 0 && notes.length === 0) {
+  if (habits.length === 0 && notes.length === 0 && expenses.length === 0) {
     throw new Error('That backup is empty — nothing to import.')
   }
 
-  return { habits, notes, exportedAt: data.exportedAt ?? null }
+  return { habits, notes, expenses, categories, exportedAt: data.exportedAt ?? null }
 }
 
 const nameKey = (habit) => habit.name.trim().toLowerCase()
@@ -104,6 +113,57 @@ export function mergeNotes(current, incoming) {
     merged.push(note)
     ids.add(note.id)
     fingerprints.add(fingerprint)
+  }
+
+  return merged.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+}
+
+/**
+ * Categories merge by name, since ids differ per device — otherwise transferring
+ * a backup would leave you with two "Food" categories.
+ * Returns the merged list plus an id remap for the expenses that referenced the
+ * incoming ones.
+ */
+export function mergeCategories(current, incoming) {
+  const merged = [...current]
+  const byName = new Map(merged.map((c) => [c.name.trim().toLowerCase(), c]))
+  const remap = new Map()
+
+  for (const candidate of incoming) {
+    const key = candidate.name.trim().toLowerCase()
+    const match = byName.get(key)
+    if (match) {
+      remap.set(candidate.id, match.id)
+    } else {
+      merged.push(candidate)
+      byName.set(key, candidate)
+      remap.set(candidate.id, candidate.id)
+    }
+  }
+  return { categories: merged, remap }
+}
+
+/**
+ * Expenses merge by id, then by a value fingerprint, so importing the same file
+ * twice cannot double your monthly total.
+ */
+export function mergeExpenses(current, incoming, remap = new Map()) {
+  const merged = [...current]
+  const ids = new Set(merged.map((e) => e.id))
+  const fingerprint = (e) => `${e.day}::${e.amount}::${e.categoryId ?? ''}::${e.note}`
+  const seen = new Set(merged.map(fingerprint))
+
+  for (const candidate of incoming) {
+    const mapped = {
+      ...candidate,
+      categoryId: candidate.categoryId
+        ? (remap.get(candidate.categoryId) ?? candidate.categoryId)
+        : null,
+    }
+    if (ids.has(mapped.id) || seen.has(fingerprint(mapped))) continue
+    merged.push(mapped)
+    ids.add(mapped.id)
+    seen.add(fingerprint(mapped))
   }
 
   return merged.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))

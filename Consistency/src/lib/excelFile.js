@@ -22,8 +22,8 @@ export const toSheets = (spec) =>
     columns: columns.map(({ width }) => ({ width })),
   }))
 
-export async function exportWorkbook({ habits, notes }) {
-  const sheets = toSheets(buildWorkbook({ habits, notes }))
+export async function exportWorkbook({ habits, notes, expenses, categories }) {
+  const sheets = toSheets(buildWorkbook({ habits, notes, expenses, categories }))
   await writeXlsxFile(sheets).toFile(workbookFilename())
 }
 
@@ -42,9 +42,10 @@ export async function importWorkbook(file) {
     (Array.isArray(sheets) ? sheets : []).map((s) => [s.sheet, s.data ?? []]),
   )
 
-  if (!byName.has(SHEETS.habits) && !byName.has(SHEETS.notes)) {
+  const known = [SHEETS.habits, SHEETS.notes, SHEETS.expenses]
+  if (!known.some((sheet) => byName.has(sheet))) {
     throw new Error(
-      `That workbook has no "${SHEETS.habits}" or "${SHEETS.notes}" sheet, so there is nothing to import.`,
+      `That workbook has no "${SHEETS.habits}", "${SHEETS.notes}" or "${SHEETS.expenses}" sheet, so there is nothing to import.`,
     )
   }
 
@@ -54,12 +55,18 @@ export async function importWorkbook(file) {
       habitRows: rowsToObjects(byName.get(SHEETS.habits) ?? []),
       checkinRows: rowsToObjects(byName.get(SHEETS.checkins) ?? []),
       noteRows: rowsToObjects(byName.get(SHEETS.notes) ?? []),
+      expenseRows: rowsToObjects(byName.get(SHEETS.expenses) ?? []),
+      categoryRows: rowsToObjects(byName.get(SHEETS.categories) ?? []),
     })
   } catch {
     throw new Error('That workbook could not be read. Some sheets may be damaged.')
   }
 
-  if (parsed.habits.length === 0 && parsed.notes.length === 0) {
+  if (
+    parsed.habits.length === 0 &&
+    parsed.notes.length === 0 &&
+    parsed.expenses.length === 0
+  ) {
     throw new Error('That workbook is empty — nothing to import.')
   }
 

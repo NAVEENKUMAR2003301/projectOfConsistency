@@ -11,6 +11,9 @@ export const HABITS_KEY = 'consistency.habits.v1'
 export const NOTES_KEY = 'consistency.notes.v1'
 export const THEME_KEY = 'consistency.theme.v1'
 export const BACKUP_META_KEY = 'consistency.backup-meta.v1'
+export const EXPENSES_KEY = 'consistency.expenses.v1'
+export const CATEGORIES_KEY = 'consistency.categories.v1'
+export const SETTINGS_KEY = 'consistency.settings.v1'
 
 export const MAX_NAME_LENGTH = 60
 export const MAX_NOTE_LENGTH = 2000
@@ -102,6 +105,54 @@ export function normalizeHabits(value) {
         history: normalizeHistory(h.history),
       }
     })
+}
+
+export const MAX_CATEGORY_NAME = 30
+export const MAX_EXPENSE_NOTE = 80
+
+export function normalizeCategories(value) {
+  if (!Array.isArray(value)) return []
+  const seen = new Set()
+  return value
+    .filter((c) => c && typeof c.name === 'string' && c.name.trim())
+    .map((c) => {
+      let id = typeof c.id === 'string' && c.id ? c.id : newId('c')
+      if (seen.has(id)) id = newId('c')
+      seen.add(id)
+      return {
+        id,
+        name: c.name.trim().slice(0, MAX_CATEGORY_NAME),
+        icon: typeof c.icon === 'string' && c.icon ? c.icon : 'receipt',
+        color: typeof c.color === 'string' && c.color ? c.color : DEFAULT_COLOR,
+      }
+    })
+}
+
+export function normalizeExpenses(value) {
+  if (!Array.isArray(value)) return []
+  const seen = new Set()
+  return value
+    .map((e) => {
+      if (!e) return null
+      // Stored as integer minor units; anything else is unusable, and a
+      // silently-zeroed expense would quietly understate every total.
+      const amount = Math.round(Number(e.amount))
+      if (!Number.isFinite(amount) || amount <= 0) return null
+
+      let id = typeof e.id === 'string' && e.id ? e.id : newId('e')
+      if (seen.has(id)) id = newId('e')
+      seen.add(id)
+
+      return {
+        id,
+        amount,
+        categoryId: typeof e.categoryId === 'string' && e.categoryId ? e.categoryId : null,
+        note: typeof e.note === 'string' ? e.note.trim().slice(0, MAX_EXPENSE_NOTE) : '',
+        day: DAY_PATTERN.test(e.day) ? e.day : today(),
+        createdAt: isoOrNull(e.createdAt),
+      }
+    })
+    .filter(Boolean)
 }
 
 export function normalizeNotes(value) {

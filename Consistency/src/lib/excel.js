@@ -1,6 +1,12 @@
 import { dayKey, timeLabel } from './dates'
 import { isKnownIcon } from './icons'
-import { newId, normalizeHabits, normalizeNotes } from './storage'
+import {
+  newId,
+  normalizeCategories,
+  normalizeExpenses,
+  normalizeHabits,
+  normalizeNotes,
+} from './storage'
 
 // Spreadsheet backup. The file is meant to be opened and read by a human, so
 // each concern gets its own sheet and check-ins are one row per occurrence
@@ -15,11 +21,15 @@ export const SHEETS = {
   habits: 'Habits',
   checkins: 'Check-ins',
   notes: 'Notes',
+  expenses: 'Expenses',
+  categories: 'Categories',
 }
 
 export const HABIT_COLUMNS = ['ID', 'Habit', 'Icon', 'Colour', 'Reminder', 'Created']
 export const CHECKIN_COLUMNS = ['Habit ID', 'Habit', 'Date', 'Time', 'Logged At']
 export const NOTE_COLUMNS = ['ID', 'Date', 'Note', 'Created', 'Updated']
+export const EXPENSE_COLUMNS = ['ID', 'Date', 'Category', 'Amount', 'Note', 'Category ID', 'Created']
+export const CATEGORY_COLUMNS = ['ID', 'Category', 'Icon', 'Colour']
 
 const text = (value) => {
   if (value === null || value === undefined) return ''
@@ -37,6 +47,20 @@ function asDay(value) {
   if (DAY_PATTERN.test(raw)) return raw
   const parsed = new Date(raw)
   return Number.isNaN(parsed.getTime()) ? '' : dayKey(parsed)
+}
+
+/**
+ * Sheet amounts are major units ('12.50'); storage wants integer minor units.
+ * Excel may hand back a number, so both shapes are accepted. Returns null for
+ * anything unusable so the row is skipped and counted, never stored as zero.
+ */
+function parseSheetAmount(value) {
+  const raw = typeof value === 'number' ? String(value) : text(value)
+  if (!raw) return null
+  const cleaned = raw.replace(/[\s,]/g, '').replace(/[^\d.-]/g, '')
+  const parsed = Number(cleaned)
+  if (!Number.isFinite(parsed) || parsed <= 0) return null
+  return Math.round(parsed * 100)
 }
 
 const pad2 = (n) => String(n).padStart(2, '0')
@@ -99,6 +123,32 @@ export const notesToRows = (notes) =>
     Updated: n.updatedAt ?? '',
   }))
 
+export const categoriesToRows = (categories) =>
+  categories.map((c) => ({
+    ID: c.id,
+    Category: c.name,
+    Icon: c.icon,
+    Colour: c.color,
+  }))
+
+export const expensesToRows = (expenses, categories) => {
+  const byId = new Map(categories.map((c) => [c.id, c]))
+  return [...expenses]
+    .sort((a, b) => a.day.localeCompare(b.day))
+    .map((e) => ({
+      ID: e.id,
+      Date: e.day,
+      // Human-readable name for reading; the ID below is what round-trips.
+      Category: byId.get(e.categoryId)?.name ?? '',
+      // Written in major units so the sheet is meaningful to a person; parsed
+      // back into integer minor units on import.
+      Amount: (e.amount / 100).toFixed(2),
+      Note: e.note,
+      'Category ID': e.categoryId ?? '',
+      Created: e.createdAt ?? '',
+    }))
+}
+
 /**
  * Column definitions in the shape write-excel-file v4 expects: a header cell
  * and a cell() mapper per column. Every cell is written as a String so Excel
@@ -116,7 +166,7 @@ const columnsFor = (columns, widths) =>
  * with its rows and column definitions. excelFile.js turns this into a file,
  * which keeps this module free of any dependency and therefore testable.
  */
-export function buildWorkbook({ habits, notes }) {
+export function buildWorkbook({ habits, notes, expenses = [], categories = [] }) {
   return [
     {
       sheet: SHEETS.habits,
@@ -132,6 +182,16 @@ export function buildWorkbook({ habits, notes }) {
       sheet: SHEETS.notes,
       rows: notesToRows(notes),
       columns: columnsFor(NOTE_COLUMNS, [16, 14, 60, 26, 26]),
+    },
+    {
+      sheet: SHEETS.expenses,
+      rows: expensesToRows(expenses, categories),
+      columns: columnsFor(EXPENSE_COLUMNS, [16, 14, 20, 12, 34, 16, 26]),
+    },
+    {
+      sheet: SHEETS.categories,
+      rows: categoriesToRows(categories),
+      columns: columnsFor(CATEGORY_COLUMNS, [16, 24, 14, 12]),
     },
   ]
 }
@@ -173,7 +233,13 @@ const pick = (row, ...keys) => {
  * to a habit by id first, then by name — a sheet edited by hand often has the
  * name but not the id. Rows that match nothing are counted, never guessed at.
  */
-export function sheetsToData({ habitRows = [], checkinRows = [], noteRows = [] }) {
+export function sheetsToData({
+  habitRows = [],
+  checkinRows = [],
+  noteRows = [],
+  expenseRows = [],
+  categoryRows = [],
+}) {
   const habits = habitRows
     .map((row) => {
       // One column holds either an icon key or a legacy emoji; whichever it
@@ -225,11 +291,48 @@ export function sheetsToData({ habitRows = [], checkinRows = [], noteRows = [] }
     }))
     .filter((n) => n.text)
 
+  const categories = categoryRows
+    .map((row) => ({
+      id: pick(row, 'id') || newId('c'),
+      name: pick(row, 'category', 'name'),
+      icon: pick(row, 'icon') || 'receipt',
+      color: pick(row, 'colour', 'color').toLowerCase(),
+    }))
+    .filter((c) => c.name)
+
+  // Expenses reference a category by id where present, else by the readable
+  // name — a hand-written row usually has the name and not the id.
+  const categoryById = new Map(categories.map((c) => [c.id, c]))
+  const categoryByName = new Map(categories.map((c) => [c.name.toLowerCase(), c]))
+
+  const expenses = expenseRows
+    .map((row) => {
+      const amount = parseSheetAmount(row.amount)
+      if (amount === null) {
+        skipped++
+        return null
+      }
+      const match =
+        categoryById.get(pick(row, 'category id', 'categoryid')) ??
+        categoryByName.get(pick(row, 'category', 'name').toLowerCase())
+      return {
+        id: pick(row, 'id') || newId('e'),
+        amount,
+        categoryId: match?.id ?? null,
+        note: pick(row, 'note'),
+        day: asDay(row.date),
+        createdAt: asIso(row.created),
+      }
+    })
+    .filter(Boolean)
+
   // Same validation as the JSON path and as first load, so a spreadsheet can
   // never introduce a shape the app would otherwise reject.
   return {
     habits: normalizeHabits(habits),
     notes: normalizeNotes(notes),
+    expenses: normalizeExpenses(expenses),
+    categories: normalizeCategories(categories),
     skipped,
   }
 }

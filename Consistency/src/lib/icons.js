@@ -1,6 +1,21 @@
 import {
   Activity,
   AlertTriangle,
+  Bus,
+  Coffee,
+  CreditCard,
+  Film,
+  Gift,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  Plug,
+  Receipt,
+  Shirt,
+  ShoppingBag,
+  Smartphone,
+  Utensils,
+  Wallet,
   ArrowLeft,
   ArrowRight,
   BarChart3,
@@ -69,6 +84,32 @@ export const HABIT_ICONS = [
 
 export const HABIT_ICON_MAP = Object.fromEntries(HABIT_ICONS.map((i) => [i.key, i]))
 
+/** Icons offered when naming your own spending categories. */
+export const CATEGORY_ICONS = [
+  { key: 'receipt', label: 'General', Icon: Receipt },
+  { key: 'food', label: 'Food', Icon: Utensils },
+  { key: 'coffee', label: 'Coffee', Icon: Coffee },
+  { key: 'transport', label: 'Transport', Icon: Bus },
+  { key: 'shopping', label: 'Shopping', Icon: ShoppingBag },
+  { key: 'clothes', label: 'Clothes', Icon: Shirt },
+  { key: 'study', label: 'Study', Icon: GraduationCap },
+  { key: 'books', label: 'Books', Icon: BookOpen },
+  { key: 'rent', label: 'Rent', Icon: Home },
+  { key: 'bills', label: 'Bills', Icon: Plug },
+  { key: 'phone', label: 'Phone', Icon: Smartphone },
+  { key: 'health', label: 'Health', Icon: HeartPulse },
+  { key: 'fun', label: 'Entertainment', Icon: Film },
+  { key: 'gift', label: 'Gifts', Icon: Gift },
+  { key: 'subscription', label: 'Subscriptions', Icon: CreditCard },
+  { key: 'other', label: 'Other', Icon: Wallet },
+]
+
+export const CATEGORY_ICON_MAP = Object.fromEntries(
+  CATEGORY_ICONS.map((i) => [i.key, i]),
+)
+
+export const categoryIcon = (key) => (CATEGORY_ICON_MAP[key] ?? CATEGORY_ICON_MAP.receipt).Icon
+
 export const DEFAULT_ICON = 'star'
 
 export const isKnownIcon = (key) =>
@@ -114,4 +155,6 @@ export const UI = {
   external: ExternalLink,
   bell: Bell,
   bellOff: BellOff,
+  money: Wallet,
+  receipt: Receipt,
 }

@@ -6,6 +6,7 @@ import DataManager from './components/DataManager'
 import HabitCard from './components/HabitCard'
 import HabitForm from './components/HabitForm'
 import MobileNav from './components/MobileNav'
+import MoneyTab from './components/MoneyTab'
 import NotesSection from './components/NotesSection'
 import ProgressRing from './components/ProgressRing'
 import PuzzleModal from './components/PuzzleModal'
@@ -20,6 +21,7 @@ import { UI } from './lib/icons'
 import { FEEDBACK_URL } from './lib/links'
 import { overallRate, perfectDays, toneFor } from './lib/progress'
 import { BACKUP_META_KEY, readJSON, writeJSON } from './lib/storage'
+import { useExpenses } from './lib/useExpenses'
 import { useHabits } from './lib/useHabits'
 import { useReminders } from './lib/useReminders'
 import { useNotes } from './lib/useNotes'
@@ -52,6 +54,7 @@ export default function App() {
   const { notes, addNote, updateNote, removeNote, replaceNotes } = useNotes()
   const { theme, setTheme } = useTheme()
   const reminders = useReminders(habits)
+  const money = useExpenses()
 
   const [tab, setTab] = useState('today')
   const [puzzleFor, setPuzzleFor] = useState(null)
@@ -287,6 +290,20 @@ export default function App() {
 
           {tab === 'stats' && <StatsDashboard habits={habits} />}
 
+          {tab === 'money' && (
+            <MoneyTab
+              expenses={money.expenses}
+              categories={money.categories}
+              currency={money.currency}
+              onSetCurrency={money.setCurrency}
+              onAdd={money.addExpense}
+              onUpdate={money.updateExpense}
+              onRemove={money.removeExpense}
+              onAddCategory={money.addCategory}
+              onRemoveCategory={money.removeCategory}
+            />
+          )}
+
           {tab === 'notes' && (
             <NotesSection
               notes={notes}
@@ -300,8 +317,12 @@ export default function App() {
             <DataManager
               habits={habits}
               notes={notes}
+              expenses={money.expenses}
+              categories={money.categories}
               onReplaceHabits={replaceHabits}
               onReplaceNotes={replaceNotes}
+              onReplaceExpenses={money.replaceExpenses}
+              onReplaceCategories={money.replaceCategories}
               onExported={() => saveBackupMeta({ lastBackupAt: new Date().toISOString() })}
               lastBackupAt={backupMeta.lastBackupAt}
             />
