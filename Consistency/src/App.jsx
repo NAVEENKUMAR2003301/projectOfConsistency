@@ -216,13 +216,15 @@ export default function App() {
           </div>
         )}
 
-        {/* Sticky so the sections stay reachable without scrolling back up. */}
-        <div className="sticky top-0 z-20 -mx-4 mt-6 px-4 py-2 sm:mx-0 sm:px-0">
+        {/* Sticky so the sections stay reachable without scrolling back up.
+            Hidden on phones, where MobileNav is pinned to the bottom instead —
+            otherwise this leaves an empty sticky strip taking up space. */}
+        <div className="sticky top-0 z-20 mt-6 hidden py-2 sm:block">
           <Tabs active={tab} onChange={setTab} />
         </div>
 
         {/* Keyed on the tab so switching sections animates in rather than snapping. */}
-        <div key={tab} className="animate-tab mt-4">
+        <div key={tab} className="animate-tab mt-6 sm:mt-4">
           {showBackupReminder && (
             <BackupReminder
               onGoToData={() => setTab('data')}
