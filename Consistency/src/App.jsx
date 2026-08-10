@@ -147,12 +147,15 @@ export default function App() {
 
   const headerTone = toneFor(stats.rate)
 
+  // The root carries no background on purpose: body paints the surface colour,
+  // so the ambient layer is not hidden behind this element's own fill.
   return (
-    <div className="relative min-h-full bg-surface">
+    <div className="relative min-h-full">
       {/* Colour pools the frosted panels refract; fixed so they never scroll away. */}
       <div className="ambient" aria-hidden="true" />
-      {/* Bottom padding reserves room for the fixed mobile nav. */}
-      <div className="mx-auto max-w-3xl px-4 pt-6 pb-28 sm:px-6 sm:pt-10 sm:pb-10">
+      {/* z-10 lifts the page above the fixed ambient layer.
+          Bottom padding reserves room for the fixed mobile nav. */}
+      <div className="relative z-10 mx-auto max-w-3xl px-4 pt-6 pb-28 sm:px-6 sm:pt-10 sm:pb-10">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs tracking-[0.22em] text-ink-3 uppercase">{prettyDate()}</p>
           <ThemeToggle theme={theme} onChange={setTheme} />
@@ -167,7 +170,7 @@ export default function App() {
               {habits.length === 0
                 ? 'Add the habits that matter to you — nothing here is preset.'
                 : allDone
-                  ? 'Every habit is done. That is a clean sweep.'
+                  ? 'Every habit is done. Nothing left to do today.'
                   : 'Solve a tiny puzzle, log the day, keep the chain alive.'}
             </p>
           </div>
@@ -191,9 +194,10 @@ export default function App() {
               hint: 'Every habit you have ever logged',
             },
             {
-              // "Perfect" would imply every other day was a failure, which is
-              // the opposite of what this app is for.
-              label: 'Clean sweeps',
+              // Plain words on purpose: "Perfect" implies every other day was a
+              // failure, and idioms like "clean sweep" assume the reader knows
+              // them. This says exactly what it counts.
+              label: 'All done days',
               value: stats.perfect,
               Icon: UI.trophy,
               hint: 'Days you completed every habit',

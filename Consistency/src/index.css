@@ -206,128 +206,154 @@
 
 /* --- frosted glass ------------------------------------------------------- */
 
-/* This class must NOT set `position`. It is unlayered CSS, so it outranks
-   Tailwind's layered utilities on a specificity tie — a `position` here would
-   silently override `fixed` and `sticky` on any element that also uses .glass,
-   which is exactly how the mobile nav stopped being pinned.
-   The top highlight is therefore an inset shadow rather than an absolutely
-   positioned ::before, so the class needs no containing block of its own. */
-.glass {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    var(--glass-shadow),
-    inset 0 1px 0 0 var(--glass-highlight);
-  /* -webkit- prefix is still required by Safari, including on iOS. */
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(165%);
-  backdrop-filter: blur(var(--glass-blur)) saturate(165%);
-}
-
-.glass-hover:hover {
-  background: var(--glass-hover);
-}
-
-/* Blur is expensive to composite. Anything that scrolls in a long list gets a
-   flat surface instead, so scrolling stays smooth on phones. */
-@supports not (backdrop-filter: blur(1px)) {
+/* Everything here lives in @layer components so Tailwind's utilities (which sit
+   in the later `utilities` layer) always win. Unlayered, these rules outranked
+   every utility on a specificity tie: `.glass` was quietly overriding `fixed`,
+   `border-x-0`, `bg-*` and `shadow-*` on any element that combined them.
+   Layer order beats specificity, so this makes the classes composable instead
+   of a trap. */
+@layer components {
   .glass {
-    background: var(--color-card);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 0 0 var(--glass-highlight);
+    /* -webkit- prefix is still required by Safari, including on iOS. */
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(165%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(165%);
+  }
+
+  .glass-hover:hover {
+    background: var(--glass-hover);
+  }
+
+  /* Browsers without backdrop-filter would render an unreadable translucent
+     panel, so they get a solid surface instead. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background: var(--color-card);
+    }
+  }
+
+  /* Ambient colour for the glass to refract. Fixed, so it does not scroll away
+     and leave panels blurring flat background. z-index 0 (not -1): a negative
+     value paints it behind an ancestor's own background, which hid it
+     entirely. The page content sits above it on z-10. */
+  .ambient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    /* Orbs are large and blurred; promoting them keeps scrolling smooth. */
+    will-change: transform;
+  }
+
+  .ambient::before,
+  .ambient::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+  }
+
+  .ambient::before {
+    width: 46rem;
+    height: 46rem;
+    top: -18rem;
+    left: -10rem;
+    background: radial-gradient(circle, var(--orb-1), transparent 68%);
+  }
+
+  .ambient::after {
+    width: 38rem;
+    height: 38rem;
+    top: 22rem;
+    right: -14rem;
+    background: radial-gradient(circle, var(--orb-2), transparent 68%);
+  }
+
+  /* Phones composite blur on a smaller GPU budget: fewer, softer orbs. */
+  @media (max-width: 640px) {
+    .ambient::before {
+      width: 30rem;
+      height: 30rem;
+      top: -12rem;
+      left: -8rem;
+    }
+    .ambient::after {
+      width: 24rem;
+      height: 24rem;
+      top: 30rem;
+      right: -10rem;
+    }
   }
 }
 
-/* Ambient colour behind the glass. Fixed, so it does not scroll away and
-   leave panels blurring flat background. */
-.ambient {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.ambient::before,
-.ambient::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-}
-
-.ambient::before {
-  width: 46rem;
-  height: 46rem;
-  top: -18rem;
-  left: -10rem;
-  background: radial-gradient(circle, var(--orb-1), transparent 68%);
-}
-
-.ambient::after {
-  width: 38rem;
-  height: 38rem;
-  top: 22rem;
-  right: -14rem;
-  background: radial-gradient(circle, var(--orb-2), transparent 68%);
-}
-
-/* Keyboard users get a visible focus ring everywhere, without one appearing
-   on mouse clicks. */
+/* Deliberately UNLAYERED: several inputs use Tailwind's `outline-none`, and a
+   layered rule would lose to it, leaving keyboard users with no visible focus.
+   Sets only outline properties — adding border-radius here would square off
+   rounded controls whenever they took focus. */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--color-ink);
   outline-offset: 2px;
-  border-radius: 0.5rem;
 }
 
-/* Notebook paper. The ruled lines are a repeating gradient whose period MUST
-   equal line-height, or the handwriting drifts off the rules line by line.
-   background-origin differs per layer: the rules start at the content box (so
-   they line up with the first line of text regardless of padding), while the
-   red margin rule is measured from the padding box. */
-.paper {
-  --rule: 32px;
-  --margin-x: 40px;
+@layer components {
+  /* Notebook paper. The ruled lines are a repeating gradient whose period MUST
+     equal line-height, or the handwriting drifts off the rules line by line.
+     background-origin differs per layer: the rules start at the content box (so
+     they line up with the first line of text regardless of padding), while the
+     red margin rule is measured from the padding box. */
+  .paper {
+    --rule: 32px;
+    --margin-x: 40px;
 
-  font-family: var(--font-hand);
-  font-size: 21px;
-  line-height: var(--rule);
-  color: var(--paper-ink);
+    font-family: var(--font-hand);
+    font-size: 21px;
+    line-height: var(--rule);
+    color: var(--paper-ink);
 
-  padding: 14px 18px 18px 56px;
-  background-color: var(--paper);
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(var(--rule) - 1px),
-      var(--paper-rule) calc(var(--rule) - 1px),
-      var(--paper-rule) var(--rule)
-    ),
-    linear-gradient(
-      to right,
-      transparent 0 var(--margin-x),
-      var(--paper-margin) var(--margin-x) calc(var(--margin-x) + 1px),
-      transparent calc(var(--margin-x) + 1px)
-    );
-  background-origin: content-box, padding-box;
-  background-repeat: repeat, no-repeat;
-  /* `local` keeps the rules glued to the text while a textarea scrolls. */
-  background-attachment: local, local;
+    padding: 14px 18px 18px 56px;
+    background-color: var(--paper);
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--rule) - 1px),
+        var(--paper-rule) calc(var(--rule) - 1px),
+        var(--paper-rule) var(--rule)
+      ),
+      linear-gradient(
+        to right,
+        transparent 0 var(--margin-x),
+        var(--paper-margin) var(--margin-x) calc(var(--margin-x) + 1px),
+        transparent calc(var(--margin-x) + 1px)
+      );
+    background-origin: content-box, padding-box;
+    background-repeat: repeat, no-repeat;
+    /* `local` keeps the rules glued to the text while a textarea scrolls. */
+    background-attachment: local, local;
+  }
+
+  /* The writable version must match the display version exactly, or text jumps
+     between editing and reading. */
+  textarea.paper {
+    display: block;
+    width: 100%;
+    resize: none;
+    overflow: hidden;
+    border: 0;
+    outline: none;
+    caret-color: var(--paper-ink);
+  }
+
+  textarea.paper::placeholder {
+    color: var(--paper-ink-faded);
+  }
 }
 
-/* The writable version must match the display version exactly, or text jumps
-   between editing and reading. */
-textarea.paper {
-  display: block;
-  width: 100%;
-  resize: none;
-  overflow: hidden;
-  border: 0;
-  outline: none;
-  caret-color: var(--paper-ink);
-}
-
-textarea.paper::placeholder {
-  color: var(--paper-ink-faded);
-}
 
 html,
 body,

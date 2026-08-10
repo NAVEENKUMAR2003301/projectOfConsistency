@@ -134,7 +134,7 @@ export default function CalendarView({ habits }) {
       <div className="mt-4 grid grid-cols-3 gap-2">
         <Stat
           value={summary.perfect}
-          label="Clean sweeps"
+          label="All done days"
           accent="text-emerald-600 dark:text-emerald-300"
         />
         <Stat value={summary.active} label="Days with progress" />

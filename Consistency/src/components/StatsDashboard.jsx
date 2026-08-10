@@ -57,10 +57,10 @@ export default function StatsDashboard({ habits }) {
           { label: 'Last 30 days', value: `${rate30}%`, tone: tone30, note: tone30.label },
           { label: 'Last 7 days', value: `${rate7}%`, tone: tone7, note: tone7.label },
           {
-            label: 'Clean sweeps',
+            label: 'All done days',
             value: perfect,
             tone: toneFor(100),
-            // Spells out what a clean sweep is, so the term explains itself.
+            // Spells out the meaning and the window, so the label needs no glossary.
             note: 'all done, last 30 days',
           },
           {
