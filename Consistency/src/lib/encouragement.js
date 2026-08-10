@@ -46,6 +46,6 @@ export function encouragementFor(streak, wasComeback) {
 export const ALL_DONE_MESSAGES = [
   'Every habit done. Close the laptop, you earned it.',
   'Clean sweep today.',
-  'That is a perfect day on the board.',
+  'Nothing left on the list today.',
   'All of them. Today was yours.',
 ]

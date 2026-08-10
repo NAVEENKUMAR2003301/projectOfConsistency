@@ -167,7 +167,7 @@ export default function App() {
               {habits.length === 0
                 ? 'Add the habits that matter to you — nothing here is preset.'
                 : allDone
-                  ? 'Every habit is done. That is a perfect day.'
+                  ? 'Every habit is done. That is a clean sweep.'
                   : 'Solve a tiny puzzle, log the day, keep the chain alive.'}
             </p>
           </div>
@@ -178,12 +178,30 @@ export default function App() {
 
         <section className="mt-8 grid grid-cols-3 gap-2 sm:gap-3">
           {[
-            { label: 'Longest active streak', value: `${stats.longest}d`, Icon: UI.flame },
-            { label: 'Total check-ins', value: stats.checkIns, Icon: UI.today },
-            { label: 'Perfect days', value: stats.perfect, Icon: UI.trophy },
-          ].map(({ label, value, Icon }, i) => (
+            {
+              label: 'Longest active streak',
+              value: `${stats.longest}d`,
+              Icon: UI.flame,
+              hint: 'Consecutive days you have kept a habit going',
+            },
+            {
+              label: 'Total check-ins',
+              value: stats.checkIns,
+              Icon: UI.today,
+              hint: 'Every habit you have ever logged',
+            },
+            {
+              // "Perfect" would imply every other day was a failure, which is
+              // the opposite of what this app is for.
+              label: 'Clean sweeps',
+              value: stats.perfect,
+              Icon: UI.trophy,
+              hint: 'Days you completed every habit',
+            },
+          ].map(({ label, value, Icon, hint }, i) => (
             <div
               key={label}
+              title={hint}
               className="glass glass-hover animate-rise rounded-2xl p-3 text-center transition-all duration-300 hover:-translate-y-0.5 sm:p-4"
               style={{ animationDelay: `${i * 70}ms` }}
             >
