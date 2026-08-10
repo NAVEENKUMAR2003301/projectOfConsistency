@@ -113,6 +113,68 @@ export function groupByDay(expenses) {
     }))
 }
 
+/** How many times today's spend must beat the usual day to count as a spike. */
+export const SPIKE_MULTIPLE = 1.5
+
+/**
+ * Days of actual spending needed in the previous week before "your usual day"
+ * means anything. With one or two, the average is dragged near zero and every
+ * ordinary day looks like a spike — a false alarm on someone's second day of
+ * using the app is the fastest way to make them ignore the warning.
+ */
+export const SPIKE_MIN_HISTORY = 3
+
+/**
+ * Today measured against yesterday, plus whether today is unusually high for
+ * you. The comparison is deliberately RELATIVE — an absolute "too much"
+ * threshold cannot be right across currencies or incomes.
+ *
+ *   direction: 'up' | 'down' | 'same' | 'idle'   ('idle' = nothing either day)
+ *   pct:       null when yesterday was zero, because n/0 is not a percentage
+ *   spike:     today is >= 1.5x your average day over the previous week
+ */
+export function spendingTrend(expenses) {
+  const todayKey = today()
+  const yesterdayKey = addDays(todayKey, -1)
+
+  const todayTotal = sumOf(onDay(expenses, todayKey))
+  const yesterdayTotal = sumOf(onDay(expenses, yesterdayKey))
+  const delta = todayTotal - yesterdayTotal
+
+  // The seven days BEFORE today — including today would flatten the very
+  // spike we are trying to detect.
+  const previousWeek = Array.from({ length: 7 }, (_, i) =>
+    sumOf(onDay(expenses, addDays(todayKey, -(i + 1)))),
+  )
+  const average = previousWeek.reduce((a, b) => a + b, 0) / previousWeek.length
+  const activeDays = previousWeek.filter((total) => total > 0).length
+
+  const direction =
+    todayTotal === 0 && yesterdayTotal === 0
+      ? 'idle'
+      : delta > 0
+        ? 'up'
+        : delta < 0
+          ? 'down'
+          : 'same'
+
+  return {
+    today: todayTotal,
+    yesterday: yesterdayTotal,
+    delta,
+    // Rounded percentage change; null when there is no base to compare against.
+    pct: yesterdayTotal > 0 ? Math.round((delta / yesterdayTotal) * 100) : null,
+    direction,
+    average: Math.round(average),
+    activeDays,
+    // Only claim "unusual" once there is enough history for "usual" to exist.
+    spike:
+      activeDays >= SPIKE_MIN_HISTORY &&
+      average > 0 &&
+      todayTotal >= average * SPIKE_MULTIPLE,
+  }
+}
+
 /**
  * Spend per category, largest first. Expenses whose category was deleted are
  * collected under a null category rather than vanishing from the totals.

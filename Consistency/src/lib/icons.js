@@ -14,6 +14,8 @@ import {
   Shirt,
   ShoppingBag,
   Smartphone,
+  TrendingDown,
+  TrendingUp,
   Utensils,
   Wallet,
   ArrowLeft,
@@ -157,4 +159,6 @@ export const UI = {
   bellOff: BellOff,
   money: Wallet,
   receipt: Receipt,
+  trendUp: TrendingUp,
+  trendDown: TrendingDown,
 }

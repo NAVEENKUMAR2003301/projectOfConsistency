@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import ExpenseForm from './ExpenseForm'
+import SpendTrend from './SpendTrend'
 import { colorOf } from '../lib/colors'
 import { dayLabel } from '../lib/dates'
-import { CURRENCIES, categoryTotals, formatMoney, groupByDay, inMonth, totals } from '../lib/money'
+import {
+  CURRENCIES,
+  categoryTotals,
+  formatMoney,
+  groupByDay,
+  inMonth,
+  spendingTrend,
+  totals,
+} from '../lib/money'
 import { UI, categoryIcon } from '../lib/icons'
 
 const VISIBLE_DAYS = 7
@@ -59,6 +68,7 @@ export default function MoneyTab({
   }, [confirmCategory])
 
   const sums = useMemo(() => totals(expenses), [expenses])
+  const trend = useMemo(() => spendingTrend(expenses), [expenses])
   const monthExpenses = useMemo(() => inMonth(expenses), [expenses])
   const breakdown = useMemo(
     () => categoryTotals(monthExpenses, categories),
@@ -104,6 +114,8 @@ export default function MoneyTab({
         <Stat label="Last 7 days" value={money(sums.week)} delay={70} />
         <Stat label="This month" value={money(sums.month)} strong delay={140} />
       </div>
+
+      <SpendTrend trend={trend} currency={currency} />
 
       {creating ? (
         <ExpenseForm
