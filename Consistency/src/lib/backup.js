@@ -79,6 +79,9 @@ export function mergeHabits(current, incoming) {
       if (candidate.createdAt && (!match.createdAt || candidate.createdAt < match.createdAt)) {
         match.createdAt = candidate.createdAt
       }
+      // Adopt an incoming reminder only where there is none, so a merge never
+      // overwrites a time you deliberately set on this device.
+      if (!match.reminder && candidate.reminder) match.reminder = candidate.reminder
     } else {
       const copy = { ...candidate, history: { ...candidate.history } }
       merged.push(copy)

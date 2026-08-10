@@ -9,6 +9,7 @@ import MobileNav from './components/MobileNav'
 import NotesSection from './components/NotesSection'
 import ProgressRing from './components/ProgressRing'
 import PuzzleModal from './components/PuzzleModal'
+import ReminderBanner from './components/ReminderBanner'
 import StatsDashboard from './components/StatsDashboard'
 import Tabs from './components/Tabs'
 import ThemeToggle from './components/ThemeToggle'
@@ -20,6 +21,7 @@ import { FEEDBACK_URL } from './lib/links'
 import { overallRate, perfectDays, toneFor } from './lib/progress'
 import { BACKUP_META_KEY, readJSON, writeJSON } from './lib/storage'
 import { useHabits } from './lib/useHabits'
+import { useReminders } from './lib/useReminders'
 import { useNotes } from './lib/useNotes'
 import { useTheme } from './lib/useTheme'
 
@@ -49,6 +51,7 @@ export default function App() {
   } = useHabits()
   const { notes, addNote, updateNote, removeNote, replaceNotes } = useNotes()
   const { theme, setTheme } = useTheme()
+  const reminders = useReminders(habits)
 
   const [tab, setTab] = useState('today')
   const [puzzleFor, setPuzzleFor] = useState(null)
@@ -224,6 +227,14 @@ export default function App() {
 
           {tab === 'today' && (
             <main className="space-y-4">
+              <ReminderBanner
+                permission={reminders.permission}
+                supported={reminders.supported}
+                anyReminders={reminders.anyReminders}
+                due={reminders.due}
+                onRequest={reminders.request}
+                onCheckIn={setPuzzleFor}
+              />
               {habits.map((habit) => (
                 <HabitCard
                   key={habit.id}

@@ -4,6 +4,8 @@ import {
   ArrowLeft,
   ArrowRight,
   BarChart3,
+  Bell,
+  BellOff,
   BookOpen,
   Calculator,
   Calendar,
@@ -110,4 +112,6 @@ export const UI = {
   retry: RotateCcw,
   feedback: MessageSquareText,
   external: ExternalLink,
+  bell: Bell,
+  bellOff: BellOff,
 }

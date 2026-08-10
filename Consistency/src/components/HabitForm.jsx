@@ -28,6 +28,7 @@ export default function HabitForm({
     initial ? (HABIT_ICON_MAP[initial.icon] ? initial.icon : null) : DEFAULT_ICON,
   )
   const [color, setColor] = useState(initial?.color ?? DEFAULT_COLOR)
+  const [reminder, setReminder] = useState(initial?.reminder ?? '')
   const [error, setError] = useState('')
 
   const isEdit = Boolean(initial)
@@ -46,7 +47,7 @@ export default function HabitForm({
       setError('You already track a habit with that name.')
       return
     }
-    onSubmit({ name: trimmed, icon, color })
+    onSubmit({ name: trimmed, icon, color, reminder: reminder || null })
   }
 
   return (
@@ -157,6 +158,38 @@ export default function HabitForm({
           )
         })}
       </div>
+
+      <p className="mt-4 text-sm font-medium text-ink-2">Daily reminder</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="relative">
+          <UI.bell
+            size={15}
+            strokeWidth={1.9}
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-3"
+          />
+          <input
+            type="time"
+            value={reminder}
+            onChange={(e) => setReminder(e.target.value)}
+            aria-label="Reminder time"
+            className="rounded-xl border border-line bg-surface py-2.5 pr-3 pl-9 text-ink outline-none focus:border-violet-500"
+          />
+        </div>
+        {reminder && (
+          <button
+            type="button"
+            onClick={() => setReminder('')}
+            className="rounded-lg px-3 py-2 text-xs text-ink-3 transition hover:bg-card-hover hover:text-ink"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      <p className="mt-1.5 text-xs text-ink-3">
+        Optional. Reminders arrive while Consistency is open in a tab, and anything
+        missed is shown the moment you come back.
+      </p>
 
       <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row">
         <button

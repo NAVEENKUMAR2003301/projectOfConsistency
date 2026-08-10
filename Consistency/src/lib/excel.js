@@ -17,7 +17,7 @@ export const SHEETS = {
   notes: 'Notes',
 }
 
-export const HABIT_COLUMNS = ['ID', 'Habit', 'Icon', 'Colour', 'Created']
+export const HABIT_COLUMNS = ['ID', 'Habit', 'Icon', 'Colour', 'Reminder', 'Created']
 export const CHECKIN_COLUMNS = ['Habit ID', 'Habit', 'Date', 'Time', 'Logged At']
 export const NOTE_COLUMNS = ['ID', 'Date', 'Note', 'Created', 'Updated']
 
@@ -39,6 +39,20 @@ function asDay(value) {
   return Number.isNaN(parsed.getTime()) ? '' : dayKey(parsed)
 }
 
+const pad2 = (n) => String(n).padStart(2, '0')
+
+/** Accepts 'HH:MM', 'H:MM', or a Date cell Excel produced from a time. */
+function asTime(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return `${pad2(value.getHours())}:${pad2(value.getMinutes())}`
+  }
+  const raw = text(value)
+  const match = raw.match(/^(\d{1,2}):(\d{2})/)
+  if (!match) return null
+  const [, h, m] = match
+  return Number(h) > 23 || Number(m) > 59 ? null : `${pad2(Number(h))}:${m}`
+}
+
 function asIso(value) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString()
   const raw = text(value)
@@ -56,6 +70,8 @@ export const habitsToRows = (habits) =>
     // Icon key for current habits; legacy habits still carry their emoji here.
     Icon: h.icon ?? h.emoji ?? '',
     Colour: h.color,
+    // Written as text so Excel cannot turn "19:30" into a fraction of a day.
+    Reminder: h.reminder ?? '',
     Created: h.createdAt ?? '',
   }))
 
@@ -105,7 +121,7 @@ export function buildWorkbook({ habits, notes }) {
     {
       sheet: SHEETS.habits,
       rows: habitsToRows(habits),
-      columns: columnsFor(HABIT_COLUMNS, [16, 32, 8, 12, 26]),
+      columns: columnsFor(HABIT_COLUMNS, [16, 32, 8, 12, 10, 26]),
     },
     {
       sheet: SHEETS.checkins,
@@ -168,6 +184,10 @@ export function sheetsToData({ habitRows = [], checkinRows = [], noteRows = [] }
         name: pick(row, 'habit', 'name'),
         icon: isKnownIcon(mark) ? mark : null,
         emoji: isKnownIcon(mark) ? null : mark || null,
+        // A spreadsheet may hand this back as a Date cell if someone reformats
+        // the column, so accept that shape too. normalizeHabits drops anything
+        // that still is not HH:MM.
+        reminder: asTime(row.reminder),
         color: pick(row, 'colour', 'color').toLowerCase(),
         createdAt: asIso(row.created),
         history: {},

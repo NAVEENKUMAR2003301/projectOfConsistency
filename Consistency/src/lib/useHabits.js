@@ -22,7 +22,7 @@ export function useHabits() {
   }, [habits])
 
   // CREATE
-  const addHabit = useCallback(({ name, icon, color }) => {
+  const addHabit = useCallback(({ name, icon, color, reminder }) => {
     const trimmed = name.trim()
     if (!trimmed) return
     setHabits((prev) => [
@@ -32,6 +32,7 @@ export function useHabits() {
         name: trimmed.slice(0, MAX_NAME_LENGTH),
         icon: icon || DEFAULT_ICON,
         emoji: null,
+        reminder: reminder || null,
         color: color || DEFAULT_COLOR,
         // Recorded so past days aren't counted as missed for a brand-new habit.
         createdAt: new Date().toISOString(),
@@ -41,7 +42,7 @@ export function useHabits() {
   }, [])
 
   // UPDATE — name/icon/colour only; history is never touched here.
-  const updateHabit = useCallback((id, { name, icon, color }) => {
+  const updateHabit = useCallback((id, { name, icon, color, reminder }) => {
     const trimmed = name.trim()
     if (!trimmed) return
     setHabits((prev) =>
@@ -53,6 +54,9 @@ export function useHabits() {
               icon: icon || h.icon,
               // Picking an icon retires the legacy emoji for good.
               emoji: icon ? null : h.emoji,
+              // `null` is a real value here — clearing the time must stick,
+              // so this cannot fall back to the previous reminder.
+              reminder: reminder ?? null,
               color,
             }
           : h,

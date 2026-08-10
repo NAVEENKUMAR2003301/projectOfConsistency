@@ -17,6 +17,9 @@ export const MAX_NOTE_LENGTH = 2000
 export const MAX_OCCURRENCE_NOTE = 300
 
 const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+// Kept here rather than imported from reminders.js: that module imports this
+// one, and a cycle would leave the pattern undefined at load time.
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
 
 export const newId = (prefix) =>
   `${prefix}-${Math.random().toString(36).slice(2, 9)}${Math.random()
@@ -91,6 +94,9 @@ export function normalizeHabits(value) {
         name: h.name.trim().slice(0, MAX_NAME_LENGTH),
         icon,
         emoji,
+        // Local 'HH:MM' or null; anything malformed becomes "no reminder"
+        // rather than a time that silently never fires.
+        reminder: TIME_PATTERN.test(h.reminder) ? h.reminder : null,
         color: typeof h.color === 'string' && h.color ? h.color : DEFAULT_COLOR,
         createdAt: isoOrNull(h.createdAt),
         history: normalizeHistory(h.history),

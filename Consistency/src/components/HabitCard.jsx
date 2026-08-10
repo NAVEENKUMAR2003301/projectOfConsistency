@@ -13,6 +13,7 @@ import {
   weekdayLabel,
 } from '../lib/dates'
 import { habitRate, toneFor } from '../lib/progress'
+import { formatTime } from '../lib/reminders'
 
 export default function HabitCard({ habit, onCheckIn, onUndo, onEdit, onRemove }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -58,6 +59,12 @@ export default function HabitCard({ habit, onCheckIn, onUndo, onEdit, onRemove }
             <h3 className="leading-tight font-semibold break-words text-ink">
               {habit.name}
             </h3>
+            {habit.reminder && (
+              <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-3">
+                <UI.bell size={12} strokeWidth={1.9} aria-hidden="true" />
+                Reminder at {formatTime(habit.reminder)}
+              </p>
+            )}
             <p className="mt-0.5 text-sm text-ink-3">
               {streak > 0 ? (
                 <span className={`inline-flex items-center gap-1 ${c.text}`}>
