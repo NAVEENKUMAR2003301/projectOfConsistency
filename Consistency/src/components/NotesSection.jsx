@@ -61,12 +61,14 @@ export default function NotesSection({ notes, onAdd, onUpdate, onRemove }) {
                 Clear
               </button>
             )}
+            {/* Matches the filled primary action used on the other tabs. */}
             <button
               onClick={save}
               disabled={!draft.trim()}
-              className="rounded-lg bg-violet-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-violet-500 disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-violet-600/25 transition-all duration-200 hover:bg-violet-500 active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
             >
-              Save note
+              <UI.plus size={14} strokeWidth={2.6} aria-hidden="true" />
+              Add note
             </button>
           </div>
         </div>

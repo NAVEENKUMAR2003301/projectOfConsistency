@@ -5,7 +5,19 @@
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* Apple's San Francisco, via the system. It is not downloadable, so it has to
+     be asked for by the platform keywords:
+       -apple-system        → SF on Safari (macOS and iOS)
+       BlinkMacSystemFont   → SF on Chrome/Edge on macOS
+     Everything after those is the closest equivalent on each other platform, so
+     the app looks native rather than importing a webfont that only imitates SF.
+     ('Inter' used to head this list but was never actually loaded — a name that
+     resolved to nothing on most machines.) */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
+    'Segoe UI Variable Text', 'Segoe UI', system-ui, Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+
   /* Self-hosted (see main.jsx) so handwriting still renders offline. */
   --font-hand: 'Caveat', 'Segoe Script', 'Bradley Hand', cursive;
 
@@ -78,6 +90,9 @@
   --paper-ink: #cdd7ff;
   --paper-ink-faded: #6f7699;
 
+  /* Inverts the OS-drawn calendar/clock glyph so it shows on a dark field. */
+  --picker-icon: invert(1) brightness(1.6);
+
   --backdrop: rgb(0 0 0 / 0.72);
   --glow: rgba(139, 92, 246, 0.16);
   --glow-ring: rgb(217 70 239 / 0.45);
@@ -112,6 +127,9 @@
   --paper-margin: #e9a3a3;
   --paper-ink: #1e2f63;
   --paper-ink-faded: #8b93b0;
+
+  /* The glyph is already dark on a light field, so leave it alone. */
+  --picker-icon: none;
 
   --backdrop: rgb(23 23 42 / 0.45);
   --glow: rgba(139, 92, 246, 0.14);
@@ -274,6 +292,61 @@
     background: radial-gradient(circle, var(--orb-2), transparent 68%);
   }
 
+  /* --- native form controls ---
+     A <select> drop-down, a date wheel and a time picker are drawn by the OS,
+     not by us. These rules are the parts we are actually allowed to influence
+     so they stop looking like a foreign object in the page. */
+
+  /* The list a <select> opens is OS-drawn; on dark backgrounds it otherwise
+     inherits a white sheet with black text. `color-scheme` on :root makes the
+     native picker follow the theme, and these make the desktop list match. */
+  option {
+    background-color: var(--color-card);
+    color: var(--color-ink);
+  }
+
+  /* Strip the platform chrome so the field matches every other input; the
+     chevron is drawn as an icon beside it instead. */
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input[type='date'],
+  input[type='time'] {
+    -webkit-appearance: none;
+    appearance: none;
+    /* Safari collapses these to the text height without a floor, which makes
+       them noticeably shorter than the fields around them. */
+    min-height: 2.75rem;
+  }
+
+  /* iOS vertically centres the value and leaves it looking off-baseline. */
+  input[type='date']::-webkit-date-and-time-value,
+  input[type='time']::-webkit-date-and-time-value {
+    text-align: left;
+  }
+
+  /* The calendar and clock glyphs are near-invisible on a dark surface. */
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    filter: var(--picker-icon);
+    cursor: pointer;
+    opacity: 0.75;
+  }
+
+  /* The habit target already has its own − and + buttons; the native spinners
+     duplicate them and are far too small to hit on a phone. */
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
   /* Phones composite blur on a smaller GPU budget: fewer, softer orbs. */
   @media (max-width: 640px) {
     .ambient::before {
@@ -365,9 +438,36 @@ body {
   margin: 0;
   background: var(--color-surface);
   color: var(--color-ink);
+  /* Stated explicitly rather than relying on Tailwind's default, so the stack
+     above is what actually renders. */
+  font-family: var(--font-sans);
+
+  /* The two smoothing hints Apple's own interfaces rely on. Without the second,
+     SF renders noticeably heavier on macOS than it does in native apps. */
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* SF is an optical-size family: let it pick the right cut for the size. */
+  font-optical-sizing: auto;
+  /* Never fake a bold or italic that the family already provides. */
+  font-synthesis: none;
+
   /* Keeps long habit names from forcing a horizontal scrollbar on narrow phones. */
   overflow-wrap: break-word;
+}
+
+/* Apple sets display type tighter than body text; at 30px+ the default
+   spacing reads loose next to native UI. */
+h1,
+h2 {
+  letter-spacing: -0.02em;
+}
+
+/* Figures that change in place — streak counts, totals, percentages — use
+   fixed-width digits so they do not jitter as the value updates. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
 }
 
 @media (prefers-reduced-motion: reduce) {

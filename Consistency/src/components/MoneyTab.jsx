@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import AddButton from './AddButton'
 import ExpenseForm from './ExpenseForm'
 import SpendTrend from './SpendTrend'
 import { colorOf } from '../lib/colors'
@@ -26,7 +27,7 @@ function Stat({ label, value, strong = false, delay = 0 }) {
       {/* Keyed on the value so the figure pops when spending changes. */}
       <p
         key={value}
-        className={`animate-count mt-1 font-bold break-words ${
+        className={`tabular animate-count mt-1 font-bold break-words ${
           strong ? 'text-xl text-ink sm:text-2xl' : 'text-lg text-ink'
         }`}
       >
@@ -92,13 +93,15 @@ export default function MoneyTab({
             Track what you actually spend on — you name the categories.
           </p>
         </div>
-        <label className="flex items-center gap-2 text-xs text-ink-3">
-          <span className="sr-only">Currency</span>
+        {/* The chevron is ours because the platform arrow cannot be themed.
+            16px text on phones: iOS zooms the page when a focused control is
+            smaller than that, which throws the whole layout off. */}
+        <div className="relative">
           <select
             value={currency}
             onChange={(e) => onSetCurrency(e.target.value)}
             aria-label="Currency"
-            className="rounded-lg border border-line bg-card px-2.5 py-1.5 text-xs text-ink outline-none focus:border-violet-500"
+            className="min-h-11 w-full rounded-xl border border-line bg-card py-2 pr-9 pl-3 text-base text-ink outline-none transition focus:border-violet-500 sm:min-h-0 sm:text-sm"
           >
             {CURRENCIES.map((c) => (
               <option key={c.code} value={c.code}>
@@ -106,17 +109,16 @@ export default function MoneyTab({
               </option>
             ))}
           </select>
-        </label>
+          <UI.chevronDown
+            size={15}
+            strokeWidth={2}
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-ink-3"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <Stat label="Today" value={money(sums.today)} />
-        <Stat label="Last 7 days" value={money(sums.week)} delay={70} />
-        <Stat label="This month" value={money(sums.month)} strong delay={140} />
-      </div>
-
-      <SpendTrend trend={trend} currency={currency} />
-
+      {/* Recording a spend is why you opened this tab, so it comes first. */}
       {creating ? (
         <ExpenseForm
           categories={categories}
@@ -129,14 +131,18 @@ export default function MoneyTab({
           submitLabel="Add expense"
         />
       ) : (
-        <button
-          onClick={() => setCreating(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-line-strong py-5 text-ink-3 transition hover:bg-card hover:text-ink"
-        >
-          <UI.plus size={17} strokeWidth={2} aria-hidden="true" />
+        <AddButton tone="emerald" onClick={() => setCreating(true)}>
           Add an expense
-        </button>
+        </AddButton>
       )}
+
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <Stat label="Today" value={money(sums.today)} />
+        <Stat label="Last 7 days" value={money(sums.week)} delay={70} />
+        <Stat label="This month" value={money(sums.month)} strong delay={140} />
+      </div>
+
+      <SpendTrend trend={trend} currency={currency} />
 
       {expenses.length === 0 && !creating && (
         <div className="glass rounded-3xl p-8 text-center">
@@ -169,7 +175,7 @@ export default function MoneyTab({
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
                       <span className="text-xs text-ink-3">{pct}%</span>
-                      <span className="font-semibold text-ink">{money(total)}</span>
+                      <span className="tabular font-semibold text-ink">{money(total)}</span>
                     </span>
                   </div>
                   <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-track">
@@ -194,7 +200,7 @@ export default function MoneyTab({
             <div key={day} className="overflow-hidden rounded-2xl border border-line">
               <div className="flex items-center justify-between gap-3 border-b border-line bg-card px-4 py-2">
                 <p className="text-xs font-medium text-ink-2">{dayLabel(day)}</p>
-                <p className="text-xs font-semibold text-ink">{money(total)}</p>
+                <p className="tabular text-xs font-semibold text-ink">{money(total)}</p>
               </div>
               <ul className="divide-y divide-line">
                 {items.map((expense) =>
@@ -241,7 +247,7 @@ export default function MoneyTab({
                           </span>
                         )}
                       </span>
-                      <span className="shrink-0 font-semibold text-ink">
+                      <span className="tabular shrink-0 font-semibold text-ink">
                         {money(expense.amount)}
                       </span>
                       <button

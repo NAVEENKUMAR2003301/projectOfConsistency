@@ -20,6 +20,7 @@ export default function HabitCard({
   habit,
   onCheckIn,
   onLogOne,
+  onUndoOne,
   onUndo,
   onEdit,
   onRemove,
@@ -123,8 +124,21 @@ export default function HabitCard({
         <div className="relative mt-4">
           <div className="flex items-center justify-between text-[11px] text-ink-3">
             <span>Today</span>
-            <span>
-              {logged} of {target}
+            <span className="flex items-center gap-2">
+              <span className="tabular">
+                {logged} of {target}
+              </span>
+              {/* Without this there is no way back from a mis-tap: the undo
+                  below only appears once the day is finished. */}
+              {logged > 0 && (
+                <button
+                  onClick={() => onUndoOne(habit)}
+                  aria-label={`Undo one for ${habit.name}`}
+                  className="rounded px-1.5 py-0.5 text-[11px] text-ink-3 transition hover:bg-card-hover hover:text-ink"
+                >
+                  undo one
+                </button>
+              )}
             </span>
           </div>
           <div className="mt-1 flex gap-1">
@@ -176,12 +190,12 @@ export default function HabitCard({
         <dl className="flex gap-5 text-sm">
           <div>
             <dt className="text-[11px] tracking-wide text-ink-3 uppercase">Best</dt>
-            <dd className="font-semibold text-ink">{best}d</dd>
+            <dd className="tabular font-semibold text-ink">{best}d</dd>
           </div>
           <div>
             <dt className="text-[11px] tracking-wide text-ink-3 uppercase">30-day</dt>
             {/* Colour tracks the number, so a slipping habit reads as slipping. */}
-            <dd className={`font-semibold ${tone.text}`}>{rate}%</dd>
+            <dd className={`tabular font-semibold ${tone.text}`}>{rate}%</dd>
           </div>
         </dl>
 

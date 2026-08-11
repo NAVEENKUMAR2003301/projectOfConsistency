@@ -72,7 +72,7 @@ export default function StatsDashboard({ habits }) {
         ].map((s) => (
           <div key={s.label} className="rounded-2xl border border-line bg-card p-4">
             <p className="text-[11px] tracking-wide text-ink-3 uppercase">{s.label}</p>
-            <p className={`mt-1 text-2xl font-bold ${s.tone.text}`}>{s.value}</p>
+            <p className={`tabular mt-1 text-2xl font-bold ${s.tone.text}`}>{s.value}</p>
             <p className="text-[11px] text-ink-3">{s.note}</p>
           </div>
         ))}
@@ -119,7 +119,7 @@ export default function StatsDashboard({ habits }) {
                         {streak}
                       </span>
                     )}
-                    <span className={`font-semibold ${tone.text}`}>{rate}%</span>
+                    <span className={`tabular font-semibold ${tone.text}`}>{rate}%</span>
                   </span>
                 </div>
                 <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-track">

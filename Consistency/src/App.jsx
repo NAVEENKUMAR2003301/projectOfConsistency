@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import AddButton from './components/AddButton'
 import BackupReminder from './components/BackupReminder'
 import CalendarView from './components/CalendarView'
 import Confetti from './components/Confetti'
@@ -49,6 +50,7 @@ export default function App() {
     removeHabit,
     logOnce,
     completeToday,
+    undoOnce,
     undoToday,
     replaceHabits,
   } = useHabits()
@@ -217,7 +219,7 @@ export default function App() {
                 aria-hidden="true"
               />
               {/* Keyed on the value so the number pops when it changes. */}
-              <p key={String(value)} className="animate-count mt-1.5 text-xl font-bold text-ink">
+              <p key={String(value)} className="tabular animate-count mt-1.5 text-xl font-bold text-ink">
                 {value}
               </p>
               <p className="mt-0.5 text-[11px] leading-tight text-ink-3">{label}</p>
@@ -233,7 +235,7 @@ export default function App() {
                 style={{ width: `${stats.rate}%` }}
               />
             </div>
-            <span className={`shrink-0 text-xs font-medium ${headerTone.text}`}>
+            <span className={`tabular shrink-0 text-xs font-medium ${headerTone.text}`}>
               {stats.rate}% · {headerTone.label}
             </span>
           </div>
@@ -264,7 +266,24 @@ export default function App() {
                 due={reminders.due}
                 onRequest={reminders.request}
                 onCheckIn={setPuzzleFor}
+                onSkip={reminders.skip}
               />
+              {/* The create action leads: on a phone a button below a long list
+                  of cards is the hardest thing on the page to reach. */}
+              {creating ? (
+                <HabitForm
+                  onSubmit={(data) => {
+                    addHabit(data)
+                    setCreating(false)
+                  }}
+                  onCancel={() => setCreating(false)}
+                  submitLabel="Add habit"
+                  takenNames={habits.map((h) => h.name)}
+                />
+              ) : (
+                <AddButton onClick={() => setCreating(true)}>Add a habit</AddButton>
+              )}
+
               {habits.map((habit, i) => (
                 <HabitCard
                   key={habit.id}
@@ -272,6 +291,7 @@ export default function App() {
                   habit={habit}
                   onCheckIn={setPuzzleFor}
                   onLogOne={(h) => logOnce(h.id)}
+                  onUndoOne={(h) => undoOnce(h.id)}
                   onUndo={undoToday}
                   onEdit={setEditing}
                   onRemove={removeHabit}
@@ -291,26 +311,6 @@ export default function App() {
                     Start with one habit — genuinely just one. You choose what it is.
                   </p>
                 </div>
-              )}
-
-              {creating ? (
-                <HabitForm
-                  onSubmit={(data) => {
-                    addHabit(data)
-                    setCreating(false)
-                  }}
-                  onCancel={() => setCreating(false)}
-                  submitLabel="Add habit"
-                  takenNames={habits.map((h) => h.name)}
-                />
-              ) : (
-                <button
-                  onClick={() => setCreating(true)}
-                  className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-line-strong py-6 text-ink-3 transition hover:bg-card hover:text-ink"
-                >
-                  <UI.plus size={17} strokeWidth={2} aria-hidden="true" />
-                  Add a habit
-                </button>
               )}
             </main>
           )}

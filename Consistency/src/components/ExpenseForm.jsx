@@ -149,7 +149,7 @@ export default function ExpenseForm({
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Category name"
             maxLength={30}
-            className="w-full rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink placeholder-ink-3 outline-none focus:border-violet-500"
+            className="w-full rounded-lg border border-line bg-card px-3 py-2.5 text-base sm:text-sm text-ink placeholder-ink-3 outline-none focus:border-violet-500"
           />
           <div className="mt-2 grid grid-cols-8 gap-1.5">
             {CATEGORY_ICONS.map(({ key, label, Icon }) => (
@@ -215,7 +215,7 @@ export default function ExpenseForm({
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g. lunch with friends"
             maxLength={MAX_EXPENSE_NOTE}
-            className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink placeholder-ink-3 outline-none focus:border-violet-500"
+            className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-base sm:text-sm text-ink placeholder-ink-3 outline-none focus:border-violet-500"
           />
         </div>
         <div>
@@ -229,7 +229,7 @@ export default function ExpenseForm({
             // No future spending: you cannot have bought it yet.
             max={today()}
             onChange={(e) => setDay(e.target.value || today())}
-            className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink outline-none focus:border-violet-500"
+            className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-base sm:text-sm text-ink outline-none focus:border-violet-500"
           />
         </div>
       </div>

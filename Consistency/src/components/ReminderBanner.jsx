@@ -14,6 +14,7 @@ export default function ReminderBanner({
   due,
   onRequest,
   onCheckIn,
+  onSkip,
 }) {
   const askable = anyReminders && supported && permission === 'default'
   const blocked = anyReminders && supported && permission === 'denied'
@@ -75,6 +76,15 @@ export default function ReminderBanner({
                   className="shrink-0 rounded-lg bg-amber-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-amber-500"
                 >
                   Check in
+                </button>
+                {/* Clears only the nudges outstanding now — a later one in the
+                    same day still arrives. */}
+                <button
+                  onClick={() => onSkip(habit)}
+                  aria-label={`Skip this reminder for ${habit.name}`}
+                  className="shrink-0 rounded-lg px-2 py-1 text-xs text-ink-3 transition hover:bg-card-hover hover:text-ink"
+                >
+                  Skip
                 </button>
               </li>
             ))}

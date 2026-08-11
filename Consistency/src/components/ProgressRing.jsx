@@ -40,7 +40,7 @@ export default function ProgressRing({ done, total }) {
       </svg>
 
       <div className="absolute text-center">
-        <p className={`text-2xl font-bold ${complete ? 'animate-pop' : ''} text-ink`}>
+        <p className={`tabular text-2xl font-bold ${complete ? 'animate-pop' : ''} text-ink`}>
           {done}
           <span className="text-ink-3">/{total}</span>
         </p>

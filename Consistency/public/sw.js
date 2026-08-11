@@ -13,6 +13,12 @@ self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim(
 // rather than piling up new ones.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
+
+  // "Skip" dismisses just this one. The slot is already recorded as announced,
+  // so it will not fire again today — while every other notification on screen
+  // stays exactly where it is.
+  if (event.action === 'skip') return
+
   event.waitUntil(
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })

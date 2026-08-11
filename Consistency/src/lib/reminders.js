@@ -78,8 +78,12 @@ export function dueSlots(habit, from = new Date()) {
     .filter(({ time, index }) => index >= done && isPastToday(time, from))
 }
 
-export const dueHabits = (habits, from = new Date()) =>
-  habits.filter((h) => isDue(h, from))
+/**
+ * Habits with at least one nudge still outstanding. A habit whose due slots
+ * have all been skipped drops off the list until its next slot comes round.
+ */
+export const dueHabits = (habits, from = new Date(), state = readNotified()) =>
+  habits.filter((h) => unskippedSlots(h, from, state).length > 0)
 
 // --- "already told you today" bookkeeping -----------------------------------
 // Keyed by habit id → day, so reopening the app or a re-render cannot produce a
@@ -93,6 +97,28 @@ export const readNotified = () => {
 // Keyed per slot, not per habit: a repeating habit must be able to nudge you
 // again later in the day without the first nudge silencing the rest.
 export const slotKey = (habitId, slotIndex = 0) => `${habitId}#${slotIndex}`
+
+// Skipping is recorded per slot too, so dismissing one nudge clears only that
+// one — the later ones in the day still come round.
+export const skipKey = (habitId, slotIndex = 0) => `skip:${habitId}#${slotIndex}`
+
+export const wasSkippedToday = (habitId, slotIndex, state = readNotified()) =>
+  state[skipKey(habitId, slotIndex)] === today()
+
+/** Marks the given slots as skipped for today. */
+export function markSkipped(habitId, slotIndexes, state = readNotified()) {
+  const next = { ...state }
+  for (const index of slotIndexes) next[skipKey(habitId, index)] = today()
+  for (const [key, day] of Object.entries(next)) {
+    if (day !== today()) delete next[key]
+  }
+  writeJSON(REMINDER_STATE_KEY, next)
+  return next
+}
+
+/** Due slots the user has not already waved away today. */
+export const unskippedSlots = (habit, from = new Date(), state = readNotified()) =>
+  dueSlots(habit, from).filter(({ index }) => !wasSkippedToday(habit.id, index, state))
 
 export const wasNotifiedToday = (habitId, state = readNotified(), slotIndex = 0) =>
   state[slotKey(habitId, slotIndex)] === today()

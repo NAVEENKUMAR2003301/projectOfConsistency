@@ -2,6 +2,7 @@ import {
   Activity,
   AlertTriangle,
   Bus,
+  ChevronDown,
   Coffee,
   CreditCard,
   Film,
@@ -159,6 +160,7 @@ export const UI = {
   bellOff: BellOff,
   money: Wallet,
   receipt: Receipt,
+  chevronDown: ChevronDown,
   trendUp: TrendingUp,
   trendDown: TrendingDown,
 }

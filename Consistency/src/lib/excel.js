@@ -26,7 +26,7 @@ export const SHEETS = {
 }
 
 export const HABIT_COLUMNS = ['ID', 'Habit', 'Icon', 'Colour', 'Target', 'Reminder', 'Reminder end', 'Created']
-export const CHECKIN_COLUMNS = ['Habit ID', 'Habit', 'Date', 'Time', 'Logged At']
+export const CHECKIN_COLUMNS = ['Habit ID', 'Habit', 'Date', 'Count', 'Time', 'Logged At']
 export const NOTE_COLUMNS = ['ID', 'Date', 'Note', 'Created', 'Updated']
 export const EXPENSE_COLUMNS = ['ID', 'Date', 'Category', 'Amount', 'Note', 'Category ID', 'Created']
 export const CATEGORY_COLUMNS = ['ID', 'Category', 'Icon', 'Colour']
@@ -102,19 +102,30 @@ export const habitsToRows = (habits) =>
   }))
 
 export const checkinsToRows = (habits) =>
-  habits.flatMap((h) =>
-    Object.entries(h.history)
-      .filter(([, occurrence]) => occurrence)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([day, occurrence]) => ({
+  habits.flatMap((h) => {
+    const target = Math.max(1, Math.round(Number(h.target)) || 1)
+    // Days with partial progress have no history entry, so iterating history
+    // alone silently dropped them from the backup. Both sources are merged.
+    const days = [
+      ...new Set([...Object.keys(h.history ?? {}), ...Object.keys(h.progress ?? {})]),
+    ].sort((a, b) => a.localeCompare(b))
+
+    return days.map((day) => {
+      const occurrence = h.history?.[day]
+      const count = occurrence ? target : Math.min(target, Number(h.progress?.[day]) || 0)
+      return {
         'Habit ID': h.id,
         Habit: h.name,
         Date: day,
+        // How many of the day's repeats were logged; the day counts as done
+        // only when this reaches the habit's target.
+        Count: String(count),
         // Friendly for reading; "Logged At" is what survives the round trip.
-        Time: occurrence.at ? timeLabel(occurrence.at) : '',
-        'Logged At': occurrence.at ?? '',
-      })),
-  )
+        Time: occurrence?.at ? timeLabel(occurrence.at) : '',
+        'Logged At': occurrence?.at ?? '',
+      }
+    })
+  })
 
 export const notesToRows = (notes) =>
   notes.map((n) => ({
@@ -178,7 +189,7 @@ export function buildWorkbook({ habits, notes, expenses = [], categories = [] })
     {
       sheet: SHEETS.checkins,
       rows: checkinsToRows(habits),
-      columns: columnsFor(CHECKIN_COLUMNS, [16, 32, 14, 12, 26]),
+      columns: columnsFor(CHECKIN_COLUMNS, [16, 32, 14, 8, 12, 26]),
     },
     {
       sheet: SHEETS.notes,
@@ -261,6 +272,7 @@ export function sheetsToData({
         color: pick(row, 'colour', 'color').toLowerCase(),
         createdAt: asIso(row.created),
         history: {},
+        progress: {},
       }
     })
     .filter((h) => h.name)
@@ -282,7 +294,23 @@ export function sheetsToData({
       skipped++
       continue
     }
-    habit.history[day] = { done: true, at: asIso(row['logged at']) }
+    // A row with no Count comes from a backup written before repeats existed,
+    // where every row meant a finished day.
+    const rowTarget = Math.max(1, Math.round(Number(habit.target)) || 1)
+    const rawCount = text(row.count)
+    const count =
+      rawCount === ''
+        ? rowTarget
+        : Math.min(rowTarget, Math.max(0, Math.round(Number(rawCount)) || 0))
+    if (count <= 0) continue
+
+    habit.progress[day] = count
+    // Only a full count finishes the day. normalizeHabits reconciles the two
+    // fields afterwards, but setting them correctly here means a partial day
+    // never briefly looks complete.
+    if (count >= rowTarget) {
+      habit.history[day] = { done: true, at: asIso(row['logged at']) }
+    }
   }
 
   const notes = noteRows

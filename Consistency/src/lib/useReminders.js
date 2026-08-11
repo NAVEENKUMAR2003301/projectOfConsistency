@@ -2,12 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   dueHabits,
   dueSlots,
+  formatTime,
   hasReminder,
   markNotified,
+  markSkipped,
   msUntil,
   readNotified,
   reminderSlots,
+  unskippedSlots,
   wasNotifiedToday,
+  wasSkippedToday,
 } from './reminders'
 import { countFor, targetOf } from './targets'
 
@@ -34,20 +38,24 @@ async function getRegistration() {
   }
 }
 
-async function showReminder(habit, { done = 0, target = 1 } = {}) {
+async function showReminder(habit, { done = 0, target = 1, slot = 0, at = '' } = {}) {
   const repeating = target > 1
   const title = repeating
     ? `${habit.name} — ${done} of ${target} done`
     : `Time for: ${habit.name}`
   const options = {
     body: repeating
-      ? `${target - done} left today. Tap to log one.`
+      ? `${target - done} left today${at ? ` · ${at} reminder` : ''}. Tap to log one.`
       : 'Open Consistency and log it before the day runs out.',
     icon: '/favicon.svg',
     badge: '/favicon.svg',
-    // One notification per habit — a re-fire replaces rather than stacks.
-    tag: `consistency-${habit.id}`,
-    renotify: false,
+    // Tagged per SLOT, not per habit: a shared tag makes each new reminder
+    // replace the previous one, so only the last would ever be seen. Every
+    // missed nudge should be visible until it is dealt with.
+    tag: `consistency-${habit.id}-${slot}`,
+    // Dismissing one notification clears only that one; the rest stay put.
+    requireInteraction: false,
+    actions: [{ action: 'skip', title: 'Skip' }],
   }
 
   const registration = await getRegistration()
@@ -56,8 +64,13 @@ async function showReminder(habit, { done = 0, target = 1 } = {}) {
     return true
   }
   try {
-    // Desktop fallback. Throws on Android, hence the worker above.
-    new Notification(title, options)
+    // Desktop fallback, used when no worker is registered. `actions` are only
+    // valid on persistent (worker) notifications — passing them to the
+    // constructor throws, which previously meant no notification appeared at
+    // all rather than one without the Skip button.
+    const { actions, ...basic } = options
+    void actions
+    new Notification(title, basic)
     return true
   } catch {
     return false
@@ -137,24 +150,26 @@ export function useReminders(habits, { sound = true } = {}) {
       for (const habit of withReminders) {
         const target = targetOf(habit)
         const done = countFor(habit)
-        // Only the newest unanswered slot fires. Coming back after several have
-        // passed should not produce a stack of identical notifications.
+        // Every slot that has come round and has not already been announced or
+        // waved away gets its own notification, so nothing goes unseen.
         const pending = dueSlots(habit, now).filter(
-          (slot) => !wasNotifiedToday(habit.id, notified.current, slot.index),
+          (slot) =>
+            !wasNotifiedToday(habit.id, notified.current, slot.index) &&
+            !wasSkippedToday(habit.id, slot.index, notified.current),
         )
         if (pending.length === 0) continue
 
         for (const slot of pending) {
           notified.current = markNotified(habit.id, notified.current, slot.index)
-        }
-        if (permission === 'granted') {
-          showReminder(habit, { done, target })
-          fired++
+          if (permission === 'granted') {
+            showReminder(habit, { done, target, slot: slot.index, at: formatTime(slot.time) })
+            fired++
+          }
         }
       }
       if (fired > 0 && sound && permission === 'granted') chime()
 
-      setDue(dueHabits(habits, new Date()))
+      setDue(dueHabits(habits, new Date(), notified.current))
 
       // Next wake-up: the soonest slot that has not already come round today.
       const waits = withReminders
@@ -181,10 +196,30 @@ export function useReminders(habits, { sound = true } = {}) {
     }
   }, [habits, permission, sound])
 
+  /**
+   * Waves away the nudges that are outstanding right now. Only those slots are
+   * cleared — a later one in the same day still comes round, which is the point
+   * of skipping rather than turning the reminder off.
+   */
+  const skip = useCallback(
+    (habit) => {
+      const outstanding = unskippedSlots(habit, new Date(), notified.current)
+      if (outstanding.length === 0) return
+      notified.current = markSkipped(
+        habit.id,
+        outstanding.map((slot) => slot.index),
+        notified.current,
+      )
+      setDue(dueHabits(habits, new Date(), notified.current))
+    },
+    [habits],
+  )
+
   return {
     permission,
     request,
     due,
+    skip,
     supported: notificationsSupported(),
     anyReminders: habits.some(hasReminder),
   }
