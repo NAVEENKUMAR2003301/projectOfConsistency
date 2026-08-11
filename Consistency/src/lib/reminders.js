@@ -1,5 +1,8 @@
 import { dayKey, today } from './dates'
 import { readJSON, writeJSON } from './storage'
+import { countFor, reminderSlots } from './targets'
+
+export { reminderSlots }
 
 // Reminder times are stored as plain 'HH:MM' local strings — not timestamps —
 // so "19:30" keeps meaning half past seven if you travel or the clocks change.
@@ -51,14 +54,28 @@ export function isPastToday(time, from = new Date()) {
 export const hasReminder = (habit) => isValidTime(habit?.reminder)
 
 /**
- * A habit is due when it has a reminder, that time has passed today, and it is
- * still not done. Used both for firing notifications and for the in-app list,
- * so the two can never disagree.
+ * A habit is due when it has a reminder, at least one of its slots has passed
+ * today, and it is still not finished. Used both for firing notifications and
+ * for the in-app list, so the two can never disagree.
  */
 export function isDue(habit, from = new Date()) {
   if (!hasReminder(habit)) return false
   if (habit.history?.[dayKey(from)]) return false
-  return isPastToday(habit.reminder, from)
+  return reminderSlots(habit).some((slot) => isPastToday(slot, from))
+}
+
+/**
+ * Slots whose time has passed today. For a repeating habit only the first
+ * `count` are considered answered, so logging keeps pace with the nudges
+ * instead of silencing all of them at once.
+ */
+export function dueSlots(habit, from = new Date()) {
+  if (!hasReminder(habit)) return []
+  if (habit.history?.[dayKey(from)]) return []
+  const done = countFor(habit, dayKey(from))
+  return reminderSlots(habit)
+    .map((time, index) => ({ time, index }))
+    .filter(({ time, index }) => index >= done && isPastToday(time, from))
 }
 
 export const dueHabits = (habits, from = new Date()) =>
@@ -73,14 +90,18 @@ export const readNotified = () => {
   return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}
 }
 
-export const wasNotifiedToday = (habitId, state = readNotified()) =>
-  state[habitId] === today()
+// Keyed per slot, not per habit: a repeating habit must be able to nudge you
+// again later in the day without the first nudge silencing the rest.
+export const slotKey = (habitId, slotIndex = 0) => `${habitId}#${slotIndex}`
 
-export function markNotified(habitId, state = readNotified()) {
-  const next = { ...state, [habitId]: today() }
+export const wasNotifiedToday = (habitId, state = readNotified(), slotIndex = 0) =>
+  state[slotKey(habitId, slotIndex)] === today()
+
+export function markNotified(habitId, state = readNotified(), slotIndex = 0) {
+  const next = { ...state, [slotKey(habitId, slotIndex)]: today() }
   // Drop entries for days gone by so this cannot grow without bound.
-  for (const [id, day] of Object.entries(next)) {
-    if (day !== today()) delete next[id]
+  for (const [key, day] of Object.entries(next)) {
+    if (day !== today()) delete next[key]
   }
   writeJSON(REMINDER_STATE_KEY, next)
   return next

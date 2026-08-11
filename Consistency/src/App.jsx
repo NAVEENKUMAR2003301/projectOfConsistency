@@ -47,6 +47,7 @@ export default function App() {
     addHabit,
     updateHabit,
     removeHabit,
+    logOnce,
     completeToday,
     undoToday,
     replaceHabits,
@@ -270,6 +271,7 @@ export default function App() {
                   index={i}
                   habit={habit}
                   onCheckIn={setPuzzleFor}
+                  onLogOne={(h) => logOnce(h.id)}
                   onUndo={undoToday}
                   onEdit={setEditing}
                   onRemove={removeHabit}

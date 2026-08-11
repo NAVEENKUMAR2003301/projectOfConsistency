@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { COLORS, COLOR_KEYS, DEFAULT_COLOR, colorOf } from '../lib/colors'
 import { DEFAULT_ICON, HABIT_ICONS, HABIT_ICON_MAP, UI } from '../lib/icons'
+import { formatTime } from '../lib/reminders'
+import { MAX_TARGET, MIN_TARGET, normalizeTarget, reminderSlots } from '../lib/targets'
 
 // Starting points, not defaults — one tap fills the form, then it's editable.
 const SUGGESTIONS = [
@@ -29,7 +31,14 @@ export default function HabitForm({
   )
   const [color, setColor] = useState(initial?.color ?? DEFAULT_COLOR)
   const [reminder, setReminder] = useState(initial?.reminder ?? '')
+  const [reminderEnd, setReminderEnd] = useState(initial?.reminderEnd ?? '')
+  const [target, setTarget] = useState(String(initial?.target ?? 1))
   const [error, setError] = useState('')
+
+  const targetNumber = normalizeTarget(target)
+  const repeating = targetNumber > 1
+  // Shows the actual times before saving, so the spread is never a surprise.
+  const slotPreview = reminderSlots({ reminder, reminderEnd, target: targetNumber })
 
   const isEdit = Boolean(initial)
 
@@ -47,7 +56,16 @@ export default function HabitForm({
       setError('You already track a habit with that name.')
       return
     }
-    onSubmit({ name: trimmed, icon, color, reminder: reminder || null })
+    onSubmit({
+      name: trimmed,
+      icon,
+      color,
+      reminder: reminder || null,
+      // Only meaningful for a repeating habit; stored as null otherwise so a
+      // stale window cannot resurface if the target goes back to once a day.
+      reminderEnd: repeating ? reminderEnd || null : null,
+      target: targetNumber,
+    })
   }
 
   return (
@@ -159,7 +177,49 @@ export default function HabitForm({
         })}
       </div>
 
-      <p className="mt-4 text-sm font-medium text-ink-2">Daily reminder</p>
+      <p className="mt-4 text-sm font-medium text-ink-2">How many times a day?</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1 rounded-xl border border-line bg-surface p-1">
+          <button
+            type="button"
+            onClick={() => setTarget(String(Math.max(MIN_TARGET, targetNumber - 1)))}
+            disabled={targetNumber <= MIN_TARGET}
+            aria-label="One fewer time a day"
+            className="grid h-8 w-8 place-items-center rounded-lg text-ink-2 transition hover:bg-card-hover hover:text-ink disabled:opacity-30"
+          >
+            −
+          </button>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={MIN_TARGET}
+            max={MAX_TARGET}
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            onBlur={() => setTarget(String(targetNumber))}
+            aria-label="Times per day"
+            className="w-12 bg-transparent text-center text-lg font-semibold text-ink outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setTarget(String(Math.min(MAX_TARGET, targetNumber + 1)))}
+            disabled={targetNumber >= MAX_TARGET}
+            aria-label="One more time a day"
+            className="grid h-8 w-8 place-items-center rounded-lg text-ink-2 transition hover:bg-card-hover hover:text-ink disabled:opacity-30"
+          >
+            +
+          </button>
+        </div>
+        <span className="text-xs text-ink-3">
+          {repeating
+            ? `Counts as done once you log it ${targetNumber} times`
+            : 'Once a day'}
+        </span>
+      </div>
+
+      <p className="mt-4 text-sm font-medium text-ink-2">
+        {repeating ? 'Remind me between' : 'Daily reminder'}
+      </p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <div className="relative">
           <UI.bell
@@ -176,16 +236,38 @@ export default function HabitForm({
             className="rounded-xl border border-line bg-surface py-2.5 pr-3 pl-9 text-ink outline-none focus:border-violet-500"
           />
         </div>
+        {repeating && (
+          <>
+            <span className="text-sm text-ink-3">and</span>
+            <input
+              type="time"
+              value={reminderEnd}
+              onChange={(e) => setReminderEnd(e.target.value)}
+              aria-label="Last reminder time"
+              className="rounded-xl border border-line bg-surface px-3 py-2.5 text-ink outline-none focus:border-violet-500"
+            />
+          </>
+        )}
         {reminder && (
           <button
             type="button"
-            onClick={() => setReminder('')}
+            onClick={() => {
+              setReminder('')
+              setReminderEnd('')
+            }}
             className="rounded-lg px-3 py-2 text-xs text-ink-3 transition hover:bg-card-hover hover:text-ink"
           >
             Clear
           </button>
         )}
       </div>
+      {repeating && reminder && (
+        <p className="mt-1.5 text-xs text-ink-3">
+          {slotPreview.length > 1
+            ? `${slotPreview.length} nudges: ${slotPreview.map(formatTime).join(', ')}`
+            : 'Add an end time to spread the reminders across the day.'}
+        </p>
+      )}
       <p className="mt-1.5 text-xs text-ink-3">
         Optional. Reminders arrive while Consistency is open in a tab, and anything
         missed is shown the moment you come back.

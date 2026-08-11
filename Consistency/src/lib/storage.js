@@ -76,6 +76,40 @@ export function normalizeHistory(value) {
   return out
 }
 
+const MAX_TARGET = 20
+
+/** Day → times logged. Values are clamped to the habit's target. */
+function normalizeProgress(value, target) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  const out = {}
+  for (const [day, raw] of Object.entries(value)) {
+    if (!DAY_PATTERN.test(day)) continue
+    const count = Math.round(Number(raw))
+    if (!Number.isFinite(count) || count <= 0) continue
+    out[day] = Math.min(count, target)
+  }
+  return out
+}
+
+/**
+ * Keeps the two day fields consistent, whatever shape the data arrived in:
+ *   - a full tally implies the day is finished, so history gains an entry
+ *   - a history entry implies a full tally, so progress is filled in
+ * Enforced here alone, so no caller can leave them disagreeing.
+ */
+function reconcileDays(history, progress, target) {
+  const nextHistory = { ...history }
+  const nextProgress = { ...progress }
+
+  for (const [day, count] of Object.entries(nextProgress)) {
+    if (count >= target && !nextHistory[day]) nextHistory[day] = { done: true, at: null }
+  }
+  for (const day of Object.keys(nextHistory)) {
+    if (!nextProgress[day]) nextProgress[day] = target
+  }
+  return { history: nextHistory, progress: nextProgress }
+}
+
 export function normalizeHabits(value) {
   if (!Array.isArray(value)) return []
   const seen = new Set()
@@ -92,6 +126,19 @@ export function normalizeHabits(value) {
       const emoji = typeof h.emoji === 'string' && h.emoji ? h.emoji : null
       const icon = isKnownIcon(h.icon) ? h.icon : emoji ? null : DEFAULT_ICON
 
+      // Times per day. Anything unusable means "once", which is how every
+      // habit behaved before targets existed.
+      const parsedTarget = Math.round(Number(h.target))
+      const target = Number.isFinite(parsedTarget)
+        ? Math.min(MAX_TARGET, Math.max(1, parsedTarget))
+        : 1
+
+      const { history, progress } = reconcileDays(
+        normalizeHistory(h.history),
+        normalizeProgress(h.progress, target),
+        target,
+      )
+
       return {
         id,
         name: h.name.trim().slice(0, MAX_NAME_LENGTH),
@@ -100,9 +147,13 @@ export function normalizeHabits(value) {
         // Local 'HH:MM' or null; anything malformed becomes "no reminder"
         // rather than a time that silently never fires.
         reminder: TIME_PATTERN.test(h.reminder) ? h.reminder : null,
+        // Only meaningful with a target above 1; the slots span reminder→end.
+        reminderEnd: TIME_PATTERN.test(h.reminderEnd) ? h.reminderEnd : null,
+        target,
         color: typeof h.color === 'string' && h.color ? h.color : DEFAULT_COLOR,
         createdAt: isoOrNull(h.createdAt),
-        history: normalizeHistory(h.history),
+        history,
+        progress,
       }
     })
 }

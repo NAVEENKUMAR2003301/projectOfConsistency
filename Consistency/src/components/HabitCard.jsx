@@ -14,11 +14,23 @@ import {
 } from '../lib/dates'
 import { habitRate, toneFor } from '../lib/progress'
 import { formatTime } from '../lib/reminders'
+import { countFor, targetOf } from '../lib/targets'
 
-export default function HabitCard({ habit, onCheckIn, onUndo, onEdit, onRemove, index = 0 }) {
+export default function HabitCard({
+  habit,
+  onCheckIn,
+  onLogOne,
+  onUndo,
+  onEdit,
+  onRemove,
+  index = 0,
+}) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const c = colorOf(habit.color)
   const done = Boolean(habit.history[today()])
+  const target = targetOf(habit)
+  const logged = countFor(habit)
+  const repeating = target > 1
   const streak = currentStreak(habit.history)
   const best = bestStreak(habit.history)
   const rate = habitRate(habit, 30)
@@ -65,7 +77,9 @@ export default function HabitCard({ habit, onCheckIn, onUndo, onEdit, onRemove, 
             {habit.reminder && (
               <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-3">
                 <UI.bell size={12} strokeWidth={1.9} aria-hidden="true" />
-                Reminder at {formatTime(habit.reminder)}
+                {repeating && habit.reminderEnd
+                  ? `${target} reminders, ${formatTime(habit.reminder)}–${formatTime(habit.reminderEnd)}`
+                  : `Reminder at ${formatTime(habit.reminder)}`}
               </p>
             )}
             <p className="mt-0.5 text-sm text-ink-3">
@@ -103,6 +117,28 @@ export default function HabitCard({ habit, onCheckIn, onUndo, onEdit, onRemove, 
           </button>
         </div>
       </header>
+
+      {/* Today's tally, so a part-finished day is visible at a glance. */}
+      {repeating && !done && (
+        <div className="relative mt-4">
+          <div className="flex items-center justify-between text-[11px] text-ink-3">
+            <span>Today</span>
+            <span>
+              {logged} of {target}
+            </span>
+          </div>
+          <div className="mt-1 flex gap-1">
+            {Array.from({ length: target }, (_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                  i < logged ? c.fill : 'bg-track'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <p className="relative mt-5 text-[11px] tracking-wide text-ink-3 uppercase">
         Last <span className="sm:hidden">7</span>
@@ -164,10 +200,13 @@ export default function HabitCard({ habit, onCheckIn, onUndo, onEdit, onRemove, 
           </div>
         ) : (
           <button
-            onClick={() => onCheckIn(habit)}
+            // A repeating habit logs one tap at a time; only the tap that
+            // completes the day goes through the puzzle, so logging water
+            // eight times does not mean eight puzzles.
+            onClick={() => (repeating && logged < target - 1 ? onLogOne(habit) : onCheckIn(habit))}
             className={`flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.03] active:scale-95 sm:flex-none ${c.button}`}
           >
-            Check in
+            {repeating ? `Log one · ${logged}/${target}` : 'Check in'}
           </button>
         )}
       </div>

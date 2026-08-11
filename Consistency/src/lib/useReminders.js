@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   dueHabits,
+  dueSlots,
   hasReminder,
-  isDue,
   markNotified,
   msUntil,
   readNotified,
+  reminderSlots,
   wasNotifiedToday,
 } from './reminders'
+import { countFor, targetOf } from './targets'
 
 // What this can and cannot do, so the UI can say so honestly:
 // a browser will only run our timers while the page is alive. Firing a
@@ -32,10 +34,15 @@ async function getRegistration() {
   }
 }
 
-async function showReminder(habit) {
-  const title = `Time for: ${habit.name}`
+async function showReminder(habit, { done = 0, target = 1 } = {}) {
+  const repeating = target > 1
+  const title = repeating
+    ? `${habit.name} — ${done} of ${target} done`
+    : `Time for: ${habit.name}`
   const options = {
-    body: 'Open Consistency and log it before the day runs out.',
+    body: repeating
+      ? `${target - done} left today. Tap to log one.`
+      : 'Open Consistency and log it before the day runs out.',
     icon: '/favicon.svg',
     badge: '/favicon.svg',
     // One notification per habit — a re-fire replaces rather than stacks.
@@ -125,21 +132,33 @@ export function useReminders(habits, { sound = true } = {}) {
     const run = () => {
       clear()
       const now = new Date()
-      const overdue = withReminders.filter(
-        (h) => isDue(h, now) && !wasNotifiedToday(h.id, notified.current),
-      )
+      let fired = 0
 
-      for (const habit of overdue) {
-        notified.current = markNotified(habit.id, notified.current)
-        if (permission === 'granted') showReminder(habit)
+      for (const habit of withReminders) {
+        const target = targetOf(habit)
+        const done = countFor(habit)
+        // Only the newest unanswered slot fires. Coming back after several have
+        // passed should not produce a stack of identical notifications.
+        const pending = dueSlots(habit, now).filter(
+          (slot) => !wasNotifiedToday(habit.id, notified.current, slot.index),
+        )
+        if (pending.length === 0) continue
+
+        for (const slot of pending) {
+          notified.current = markNotified(habit.id, notified.current, slot.index)
+        }
+        if (permission === 'granted') {
+          showReminder(habit, { done, target })
+          fired++
+        }
       }
-      if (overdue.length > 0 && sound && permission === 'granted') chime()
+      if (fired > 0 && sound && permission === 'granted') chime()
 
       setDue(dueHabits(habits, new Date()))
 
-      // Next wake-up: the soonest reminder that has not already fired today.
+      // Next wake-up: the soonest slot that has not already come round today.
       const waits = withReminders
-        .map((h) => msUntil(h.reminder))
+        .flatMap((h) => reminderSlots(h).map((time) => msUntil(time)))
         .filter((ms) => typeof ms === 'number' && ms > 0)
       if (waits.length === 0) return
 

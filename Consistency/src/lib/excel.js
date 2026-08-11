@@ -25,7 +25,7 @@ export const SHEETS = {
   categories: 'Categories',
 }
 
-export const HABIT_COLUMNS = ['ID', 'Habit', 'Icon', 'Colour', 'Reminder', 'Created']
+export const HABIT_COLUMNS = ['ID', 'Habit', 'Icon', 'Colour', 'Target', 'Reminder', 'Reminder end', 'Created']
 export const CHECKIN_COLUMNS = ['Habit ID', 'Habit', 'Date', 'Time', 'Logged At']
 export const NOTE_COLUMNS = ['ID', 'Date', 'Note', 'Created', 'Updated']
 export const EXPENSE_COLUMNS = ['ID', 'Date', 'Category', 'Amount', 'Note', 'Category ID', 'Created']
@@ -95,7 +95,9 @@ export const habitsToRows = (habits) =>
     Icon: h.icon ?? h.emoji ?? '',
     Colour: h.color,
     // Written as text so Excel cannot turn "19:30" into a fraction of a day.
+    Target: String(h.target ?? 1),
     Reminder: h.reminder ?? '',
+    'Reminder end': h.reminderEnd ?? '',
     Created: h.createdAt ?? '',
   }))
 
@@ -171,7 +173,7 @@ export function buildWorkbook({ habits, notes, expenses = [], categories = [] })
     {
       sheet: SHEETS.habits,
       rows: habitsToRows(habits),
-      columns: columnsFor(HABIT_COLUMNS, [16, 32, 8, 12, 10, 26]),
+      columns: columnsFor(HABIT_COLUMNS, [16, 32, 8, 12, 8, 10, 12, 26]),
     },
     {
       sheet: SHEETS.checkins,
@@ -253,7 +255,9 @@ export function sheetsToData({
         // A spreadsheet may hand this back as a Date cell if someone reformats
         // the column, so accept that shape too. normalizeHabits drops anything
         // that still is not HH:MM.
+        target: Number(text(row.target)) || 1,
         reminder: asTime(row.reminder),
+        reminderEnd: asTime(row['reminder end']),
         color: pick(row, 'colour', 'color').toLowerCase(),
         createdAt: asIso(row.created),
         history: {},
