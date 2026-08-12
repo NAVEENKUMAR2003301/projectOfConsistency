@@ -7,30 +7,6 @@
 
 self.addEventListener('install', () => self.skipWaiting())
 
-// Arrives from the server while the app is closed. This is the only path that
-// can notify you without a tab open — everything else needs the page running.
-self.addEventListener('push', (event) => {
-  let data = {}
-  try {
-    data = event.data ? event.data.json() : {}
-  } catch {
-    // A malformed payload should still produce something useful.
-  }
-
-  const title = data.title || 'Consistency'
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body: data.body || 'Time to log a habit.',
-      icon: '/favicon.svg',
-      badge: '/favicon.svg',
-      // Per slot, so several missed reminders stack instead of replacing.
-      tag: data.tag || 'consistency',
-      data: { habitId: data.habitId ?? null },
-      actions: [{ action: 'skip', title: 'Skip' }],
-    }),
-  )
-})
-
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
 
 // Tapping a reminder should land you in the app, focusing an existing tab

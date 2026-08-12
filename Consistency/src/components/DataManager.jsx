@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react'
-import AccountPanel from './AccountPanel'
 import {
   backupFilename,
   buildBackup,
@@ -271,8 +270,6 @@ export default function DataManager({
           so this stays tiny — you would need thousands of entries to fill it.
         </p>
       </div>
-
-      <AccountPanel habits={habits} />
 
       <div className="glass rounded-3xl p-4 sm:p-5">
         <h3 className="font-semibold text-ink">Privacy</h3>
