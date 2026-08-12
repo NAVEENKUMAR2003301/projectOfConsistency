@@ -25,3 +25,4 @@ dist-ssr
 
 # Test harness build output
 test/.build
+test/.build-ui

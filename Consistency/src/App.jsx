@@ -110,6 +110,18 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [habits, dayTick])
 
+  // Escape closes the edit sheet, matching the tour and the puzzle. Without it
+  // this was the one overlay in the app that trapped you until you found the
+  // Cancel button.
+  useEffect(() => {
+    if (!editing) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setEditing(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [editing])
+
   // Celebration is self-dismissing so nothing lingers over the board.
   useEffect(() => {
     if (!celebration) return
@@ -409,6 +421,9 @@ export default function App() {
 
       {editing && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Edit ${editing.name}`}
           className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto p-4"
           style={{ background: 'var(--backdrop)', backdropFilter: 'blur(4px)' }}
         >

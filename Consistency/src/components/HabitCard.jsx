@@ -14,7 +14,7 @@ import {
 } from '../lib/dates'
 import { habitRate, toneFor } from '../lib/progress'
 import { formatTime } from '../lib/reminders'
-import { countFor, targetOf } from '../lib/targets'
+import { countFor, reminderSlots, targetOf } from '../lib/targets'
 
 export default function HabitCard({
   habit,
@@ -34,6 +34,7 @@ export default function HabitCard({
   const repeating = target > 1
   const streak = currentStreak(habit.history)
   const best = bestStreak(habit.history)
+  const slots = reminderSlots(habit)
   const rate = habitRate(habit, 30)
   const tone = toneFor(rate)
   const days = lastDays(14)
@@ -78,8 +79,11 @@ export default function HabitCard({
             {habit.reminder && (
               <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-3">
                 <UI.bell size={12} strokeWidth={1.9} aria-hidden="true" />
-                {repeating && habit.reminderEnd
-                  ? `${target} reminders, ${formatTime(habit.reminder)}–${formatTime(habit.reminderEnd)}`
+                {/* Counted from the slots that will actually fire, not from the
+                    target: an end time earlier than the start collapses to a
+                    single reminder, and claiming otherwise would be a lie. */}
+                {slots.length > 1
+                  ? `${slots.length} reminders, ${formatTime(slots[0])}–${formatTime(slots.at(-1))}`
                   : `Reminder at ${formatTime(habit.reminder)}`}
               </p>
             )}

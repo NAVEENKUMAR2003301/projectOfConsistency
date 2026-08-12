@@ -39,6 +39,9 @@ export default function HabitForm({
   const repeating = targetNumber > 1
   // Shows the actual times before saving, so the spread is never a surprise.
   const slotPreview = reminderSlots({ reminder, reminderEnd, target: targetNumber })
+  // An end time that is not after the start collapses the spread back to a
+  // single reminder. Saying so beats silently sending one nudge instead of ten.
+  const badWindow = repeating && Boolean(reminder && reminderEnd) && slotPreview.length <= 1
 
   const isEdit = Boolean(initial)
 
@@ -54,6 +57,10 @@ export default function HabitForm({
     )
     if (clash) {
       setError('You already track a habit with that name.')
+      return
+    }
+    if (badWindow) {
+      setError('The last reminder needs to be later in the day than the first.')
       return
     }
     onSubmit({
@@ -265,7 +272,9 @@ export default function HabitForm({
         <p className="mt-1.5 text-xs text-ink-3">
           {slotPreview.length > 1
             ? `${slotPreview.length} nudges: ${slotPreview.map(formatTime).join(', ')}`
-            : 'Add an end time to spread the reminders across the day.'}
+            : badWindow
+              ? 'The last reminder needs to be later in the day than the first.'
+              : 'Add an end time to spread the reminders across the day.'}
         </p>
       )}
       <p className="mt-1.5 text-xs text-ink-3">

@@ -36,7 +36,7 @@ npm run dev      # http://localhost:5173
 ```
 
 ```bash
-npm test         # 19 suites: logic, CSS, layout, backups
+npm test         # 21 suites: logic, components, CSS, layout, backups
 npm run lint     # eslint
 npm run build    # production build into dist/
 npm run preview  # serve the production build locally

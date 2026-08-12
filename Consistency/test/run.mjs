@@ -40,6 +40,10 @@ runVite(
   ['build', '--ssr', 'test/_harness/libs.js', '--outDir', 'test/.build', '--logLevel', 'error'],
   'building libs',
 )
+runVite(
+  ['build', '--ssr', 'test/_harness/ui.jsx', '--outDir', 'test/.build-ui', '--logLevel', 'error'],
+  'building components',
+)
 if (existsSync(appPath('dist', 'index.html'))) {
   console.log('using existing dist/ (delete it to force a rebuild)')
 } else {

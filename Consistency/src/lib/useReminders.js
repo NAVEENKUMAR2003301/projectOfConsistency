@@ -159,12 +159,16 @@ export function useReminders(habits, { sound = true } = {}) {
         )
         if (pending.length === 0) continue
 
+        // Only a slot we actually announced counts as announced. Marking one
+        // while permission is still 'default' would record a nudge that never
+        // appeared, and granting permission later in the day would then find
+        // every slot already spoken for and stay silent until tomorrow.
+        if (permission !== 'granted') continue
+
         for (const slot of pending) {
           notified.current = markNotified(habit.id, notified.current, slot.index)
-          if (permission === 'granted') {
-            showReminder(habit, { done, target, slot: slot.index, at: formatTime(slot.time) })
-            fired++
-          }
+          showReminder(habit, { done, target, slot: slot.index, at: formatTime(slot.time) })
+          fired++
         }
       }
       if (fired > 0 && sound && permission === 'granted') chime()

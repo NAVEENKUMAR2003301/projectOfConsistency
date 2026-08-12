@@ -31,6 +31,19 @@ const loopBody = hook.slice(hook.indexOf('for (const slot of pending)'), hook.in
 check('notification fires inside the slot loop', loopBody.includes('showReminder('), loopBody.slice(0, 200))
 check('each fire is counted', loopBody.includes('fired++'))
 
+// ---------- "already told you" must mean we actually told you ----------
+// markNotified used to run before the permission check, so a slot that came
+// round while permission was still 'default' was recorded as announced. The
+// effect re-runs when permission changes, and by then every slot for the day
+// looked spoken for — granting permission bought silence until tomorrow.
+const permissionGate = hook.indexOf("if (permission !== 'granted') continue")
+check('firing is gated on permission before anything is recorded', permissionGate > -1)
+check(
+  'nothing is marked notified without permission',
+  permissionGate > -1 && permissionGate < hook.indexOf('markNotified(habit.id'),
+  'granting permission mid-day would then produce no reminders at all',
+)
+
 // ---------- skipping is per slot, never per habit ----------
 check('skip state is recorded', hook.includes('markSkipped'))
 check('skipped slots are excluded from firing', hook.includes('wasSkippedToday'))

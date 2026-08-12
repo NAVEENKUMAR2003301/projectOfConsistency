@@ -5,7 +5,10 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // Build output, not source: the production bundle and the two SSR bundles
+  // the test runner compiles. Linting generated code reports our own rules
+  // back at us from machine-written output.
+  globalIgnores(['dist', 'test/.build', 'test/.build-ui']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

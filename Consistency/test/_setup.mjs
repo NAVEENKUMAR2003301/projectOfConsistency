@@ -14,6 +14,26 @@ export const readApp = (...parts) => readFileSync(appPath(...parts), 'utf8')
 export const loadLibs = () =>
   import(pathToFileURL(appPath('test', '.build', 'libs.js')).href)
 
+/**
+ * The component bundle, rendered server-side. `render()` returns the markup of
+ * every component against ordinary, legacy and deliberately broken data — a
+ * component that throws in a browser throws here too.
+ */
+export const loadUI = () =>
+  import(pathToFileURL(appPath('test', '.build-ui', 'ui.js')).href)
+
+/** Markup reduced to its visible words, so assertions read like the screen. */
+export const visibleText = (html) =>
+  String(html)
+    .split('<!-- -->')
+    .join('')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim()
+
 /** The production stylesheet, for checks that must see the compiled output. */
 export function readBuiltCss() {
   const dir = appPath('dist', 'assets')
