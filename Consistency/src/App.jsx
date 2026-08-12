@@ -9,6 +9,7 @@ import HabitForm from './components/HabitForm'
 import MobileNav from './components/MobileNav'
 import MoneyTab from './components/MoneyTab'
 import NotesSection from './components/NotesSection'
+import Onboarding from './components/Onboarding'
 import ProgressRing from './components/ProgressRing'
 import PuzzleModal from './components/PuzzleModal'
 import ReminderBanner from './components/ReminderBanner'
@@ -21,7 +22,7 @@ import { ALL_DONE_MESSAGES, encouragementFor } from './lib/encouragement'
 import { UI } from './lib/icons'
 import { FEEDBACK_URL } from './lib/links'
 import { overallRate, perfectDays, toneFor } from './lib/progress'
-import { BACKUP_META_KEY, readJSON, writeJSON } from './lib/storage'
+import { BACKUP_META_KEY, ONBOARDED_KEY, readJSON, writeJSON } from './lib/storage'
 import { useExpenses } from './lib/useExpenses'
 import { useHabits } from './lib/useHabits'
 import { useReminders } from './lib/useReminders'
@@ -65,6 +66,7 @@ export default function App() {
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState(null)
   const [dayTick, setDayTick] = useState(0)
+  const [showTour, setShowTour] = useState(() => readJSON(ONBOARDED_KEY, null) !== true)
   const [backupMeta, setBackupMeta] = useState(() =>
     readJSON(BACKUP_META_KEY, { lastBackupAt: null, dismissedAt: null }),
   )
@@ -156,6 +158,15 @@ export default function App() {
     <div className="relative min-h-full">
       {/* Colour pools the frosted panels refract; fixed so they never scroll away. */}
       <div className="ambient" aria-hidden="true" />
+
+      {showTour && (
+        <Onboarding
+          onDone={() => {
+            writeJSON(ONBOARDED_KEY, true)
+            setShowTour(false)
+          }}
+        />
+      )}
       {/* z-10 lifts the page above the fixed ambient layer.
           Bottom padding reserves room for the fixed mobile nav. */}
       <div className="relative z-10 mx-auto max-w-3xl px-4 pt-6 pb-28 sm:px-6 sm:pt-10 sm:pb-10">

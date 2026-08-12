@@ -14,6 +14,7 @@ export const BACKUP_META_KEY = 'consistency.backup-meta.v1'
 export const EXPENSES_KEY = 'consistency.expenses.v1'
 export const CATEGORIES_KEY = 'consistency.categories.v1'
 export const SETTINGS_KEY = 'consistency.settings.v1'
+export const ONBOARDED_KEY = 'consistency.onboarded.v1'
 
 export const MAX_NAME_LENGTH = 60
 export const MAX_NOTE_LENGTH = 2000
