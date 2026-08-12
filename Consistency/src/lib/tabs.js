@@ -11,4 +11,3 @@ export const TABS = [
   { key: 'data', label: 'Data', Icon: UI.data },
 ]
 
-export const TAB_KEYS = TABS.map((t) => t.key)

@@ -22,7 +22,6 @@ export const normalizeTarget = (value) => {
 
 export const targetOf = (habit) => normalizeTarget(habit?.target ?? MIN_TARGET)
 
-export const isRepeating = (habit) => targetOf(habit) > 1
 
 /** Times logged on a day, never above the target. */
 export function countFor(habit, day = today()) {
@@ -39,11 +38,6 @@ export const isComplete = (habit, day = today()) => countFor(habit, day) >= targ
 export const remainingFor = (habit, day = today()) =>
   Math.max(0, targetOf(habit) - countFor(habit, day))
 
-/** 0–100, for the ring on the card. */
-export function percentFor(habit, day = today()) {
-  const target = targetOf(habit)
-  return target === 0 ? 0 : Math.round((countFor(habit, day) / target) * 100)
-}
 
 // --- reminder slots ---------------------------------------------------------
 

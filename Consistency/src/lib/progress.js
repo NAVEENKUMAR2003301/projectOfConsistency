@@ -1,4 +1,4 @@
-import { existedOn, lastDays, today } from './dates'
+import { existedOn, lastDays } from './dates'
 
 // Progress colour is a function of completion, so bars and figures shift from
 // rose → amber → emerald as consistency improves. Classes are literal so
@@ -72,4 +72,3 @@ export function perfectDays(habits, window = 60) {
   }).length
 }
 
-export const isDoneToday = (habit) => Boolean(habit.history[today()])

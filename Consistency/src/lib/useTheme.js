@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 
-const STORAGE_KEY = 'consistency.theme.v1'
-export const THEMES = ['light', 'dark', 'system']
+// Imported rather than repeated: this key is also written by the pre-paint
+// script in index.html, and previously existed as a second literal in
+// storage.js. Three copies of one string is three chances to break the theme
+// silently.
+import { THEME_KEY } from './storage'
+
+const THEMES = ['light', 'dark', 'system']
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
 
@@ -17,7 +22,7 @@ const getSystemServerSnapshot = () => false
 
 const readStored = () => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(THEME_KEY)
     return THEMES.includes(stored) ? stored : 'system'
   } catch {
     return 'system'
@@ -44,7 +49,7 @@ export function useTheme() {
     if (!THEMES.includes(next)) return
     setThemeState(next)
     try {
-      localStorage.setItem(STORAGE_KEY, next)
+      localStorage.setItem(THEME_KEY, next)
     } catch {
       // Private mode — the choice just won't survive a reload.
     }

@@ -155,7 +155,17 @@ export default function App() {
   // The root carries no background on purpose: body paints the surface colour,
   // so the ambient layer is not hidden behind this element's own fill.
   return (
-    <div className="relative min-h-full">
+    <div
+      className="relative min-h-full"
+      // Installed to the Home Screen with a translucent status bar, iOS draws
+      // the page under the notch and the clock sits on top of the date row.
+      // These are 0 everywhere else, so nothing changes in a normal tab.
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       {/* Colour pools the frosted panels refract; fixed so they never scroll away. */}
       <div className="ambient" aria-hidden="true" />
 

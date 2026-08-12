@@ -10,12 +10,20 @@ Everything is stored in your browser. No account, no server, no analytics.
 
 - **Habits** — create, edit, delete; your own names, icons and colours (nothing preset)
 - **Puzzle check-in** — quick maths, sequences, unscrambles, odd-one-out, counting
+- **Daily targets** — repeat a habit several times a day (eight glasses of water)
+- **Reminders** — a time per habit, spread across a window for repeats; skip one
+  without silencing the rest
 - **Streaks & badges** — current/best streaks, milestones at 3 / 7 / 14 / 30 / 100 / 365 days
 - **Calendar** — monthly heatmap with five intensity levels; tap a day for detail
 - **Stats** — 7- and 30-day completion rates, 14-day chart, per-habit ranking
+- **Money** — expenses with your own categories, and a spend-vs-yesterday indicator
 - **Notes** — write your plan, shown back as handwriting on ruled paper
 - **Backups** — export/import as Excel (`.xlsx`) or JSON, with merge or replace
-- **Light / dark / system** theme, and a mobile bottom nav
+- **First-run tour**, light / dark / system theme, and a mobile bottom nav
+
+Reminders arrive while the app is open, including in a background tab, and
+anything missed is shown when you come back. A web page cannot notify you once
+it is fully closed without a server to push from — see the note at the end.
 
 ## Running locally
 
@@ -28,6 +36,7 @@ npm run dev      # http://localhost:5173
 ```
 
 ```bash
+npm test         # 19 suites: logic, CSS, layout, backups
 npm run lint     # eslint
 npm run build    # production build into dist/
 npm run preview  # serve the production build locally
@@ -144,8 +153,19 @@ should genuinely 404. If you later add a router, add this to `vercel.json`:
 
 ## Your data
 
-Stored in `localStorage` under `consistency.habits.v1`, `consistency.notes.v1`,
-`consistency.theme.v1` and `consistency.backup-meta.v1` — on your device only.
+Stored in `localStorage` on your device only, under `consistency.*.v1` keys:
+`habits`, `notes`, `expenses`, `categories`, `settings`, `theme`, `reminders`,
+`backup-meta` and `onboarded`. Every key is declared in
+[`src/lib/storage.js`](src/lib/storage.js).
+
+### Why reminders stop when the app is closed
+
+A page's timers die with the tab, and a service worker cannot schedule its own
+wake-up — the browser API for that (Notification Triggers) was never shipped.
+The only mechanism that works is Web Push, and push services deliver rather than
+schedule, so something must be awake at the reminder time to send. That means a
+server, which this app deliberately does not have. Your phone's clock app is the
+better tool for alarms that must fire with the app shut.
 
 Clearing site data wipes it, and Safari may evict it after ~7 days without a visit.
 The **Data** tab exports a backup for exactly that reason, and nags after 14 days

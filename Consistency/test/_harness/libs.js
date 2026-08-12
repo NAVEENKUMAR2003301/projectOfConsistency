@@ -1,0 +1,16 @@
+// Test entry point. Vite bundles this so the suites can import the libraries
+// the same way the app does — extensionless paths and all — from plain Node.
+export * as backup from '../../src/lib/backup.js'
+export * as badges from '../../src/lib/badges.js'
+export * as colors from '../../src/lib/colors.js'
+export * as dates from '../../src/lib/dates.js'
+export * as excel from '../../src/lib/excel.js'
+export * as icons from '../../src/lib/icons.js'
+export * as money from '../../src/lib/money.js'
+export * as progress from '../../src/lib/progress.js'
+export * as puzzles from '../../src/lib/puzzles.js'
+export * as reminders from '../../src/lib/reminders.js'
+export * as storage from '../../src/lib/storage.js'
+export * as tabs from '../../src/lib/tabs.js'
+export * as targets from '../../src/lib/targets.js'
+export * as encouragement from '../../src/lib/encouragement.js'

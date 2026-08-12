@@ -434,6 +434,42 @@ body,
   height: 100%;
 }
 
+html {
+  /* iOS enlarges text when a phone is rotated to landscape unless told not
+     to. The layout is already responsive; it does not need help. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* Tapping anything on iOS flashes a grey box by default, which instantly
+     reads as "web page" rather than "app". The components define their own
+     press states. */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Stops an over-scroll at the top or bottom from dragging the whole page
+     and exposing the browser's background behind it. */
+  overscroll-behavior-y: none;
+}
+
+/* Chrome — buttons, tabs, labels — should not be selectable: a long press on
+   a nav item should feel like a press, not the start of a text selection.
+   Anything the user actually wrote stays selectable. */
+button,
+[role='tab'],
+nav,
+label {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* A scrollable panel should not hand its momentum to the page behind it once
+   it reaches the end. */
+.overflow-y-auto,
+.overflow-auto {
+  overscroll-behavior: contain;
+}
+
 body {
   margin: 0;
   background: var(--color-surface);

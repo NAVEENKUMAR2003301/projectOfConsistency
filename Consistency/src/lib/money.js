@@ -1,4 +1,4 @@
-import { addDays, dayKey, today } from './dates'
+import { addDays, today } from './dates'
 
 // Amounts are stored as INTEGER minor units (hundredths), never as floats.
 // 0.1 + 0.2 !== 0.3 in binary floating point, and a spending tracker that
@@ -84,7 +84,6 @@ export function inLastDays(expenses, days) {
 export const inMonth = (expenses, month = today().slice(0, 7)) =>
   expenses.filter((e) => e.day.startsWith(month))
 
-export const monthOf = (date = new Date()) => dayKey(date).slice(0, 7)
 
 export function totals(expenses) {
   return {
